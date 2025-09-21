@@ -1,13 +1,18 @@
 import * as React from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
+  AlertTriangle,
+  Search,
+  ScanEye,
   BookOpen,
   Bot,
-  Cog ,
-  LifeBuoy,
+  Database,
+  Leaf,
+  Info,
   Map,
+  BarChart3,
   Send,
-  Settings2,
+  CircleQuestionMark,
   CircleGauge, 
   Proportions,
   MessageSquare,
@@ -29,126 +34,125 @@ import {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
-
   const data = {
     navMain: [
       {
         title: "Dashboard",
         url: "/dashboard",
         icon: CircleGauge,
-        isActive: location.pathname === "/dashboard",
+      },
+      {
+        title: "Plant Identifications",
+        url: "/dashboard/identifications",
+        icon: Search,
         items: [
           {
-            title: "History",
-            url: "/dashboard/history",
+            title: "Recent Activity",
+            url: "/dashboard/identifications/recent",
           },
           {
-            title: "Starred",
-            url: "/dashboard/starred",
+            title: "Most Popular",
+            url: "/dashboard/identifications/popular",
           },
           {
-            title: "Settings",
-            url: "/dashboard/settings",
+            title: "Search History",
+            url: "/dashboard/identifications/search",
           },
         ],
       },
       {
-        title: "Agents",
-        url: "/dashboard/agents",
+        title: "Content Moderation",
+        url: "/dashboard/moderation",
+        icon: ScanEye,
+        items: [
+          {
+            title: "Flagged Plants",
+            url: "/dashboard/moderation/flagged",
+          },
+          {
+            title: "User Reports",
+            url: "/dashboard/moderation/reports",
+          },
+          {
+            title: "Review Queue",
+            url: "/dashboard/moderation/queue",
+          },
+        ],
+      },
+      {
+        title: "AI Management",
+        url: "/dashboard/ai",
         icon: Bot,
         items: [
           {
-            title: "Assigned",
-            url: "/dashboard/agents/assigned",
+            title: "LLM Performance",
+            url: "/dashboard/ai/performance",
           },
           {
-            title: "Unassigned",
-            url: "/dashboard/agents/unassigned",
+            title: "Model Outputs",
+            url: "/dashboard/ai/outputs",
           },
           {
-            title: "Completed",
-            url: "/dashboard/agents/completed",
+            title: "Training Data",
+            url: "/dashboard/ai/training",
           },
         ],
       },
       {
-        title: "Issues",
-        url: "/dashboard/issues",
-        icon: BookOpen,
+        title: "System Management",
+        url: "/dashboard/system",
+        icon: Database,
         items: [
           {
-            title: "All Issues",
-            url: "/dashboard/issues",
+            title: "Cache Status",
+            url: "/dashboard/system/cache",
           },
           {
-            title: "Open / In Progress",
-            url: "/dashboard/issues/open",
+            title: "System Logs",
+            url: "/dashboard/system/logs",
           },
           {
-            title: "Resolved / Closed",
-            url: "/dashboard/issues/closed",
-          },
-          {
-            title: "Manual Submission",
-            url: "/dashboard/issues/manual",
+            title: "Performance",
+            url: "/dashboard/system/performance",
           },
         ],
       },
       {
-        title: "Settings",
-        url: "/dashboard/settings",
-        icon: Settings2,
-        items: [
-          {
-            title: "General",
-            url: "/dashboard/settings/general",
-          },
-          {
-            title: "Team",
-            url: "/dashboard/settings/team",
-          },
-          {
-            title: "Billing",
-            url: "/dashboard/settings/billing",
-          },
-          {
-            title: "Limits",
-            url: "/dashboard/settings/limits",
-          },
-        ],
+        title: "Analytics",
+        url: "/dashboard/analytics",
+        icon: BarChart3,
       },
     ],
     projects: [
       {
-        name: "Reports",
-        url: "/dashboard/reports",
-        icon: Proportions,
+        name: "Plant Database",
+        url: "/dashboard/database", 
+        icon: BookOpen,
       },
       {
-        name: "Chatlogs",
-        url: "/dashboard/chat",
+        name: "User Management",
+        url: "/dashboard/users", 
         icon: MessageSquare,
       },
       {
-        name: "Facilities",
-        url: "/dashboard/facilities",
-        icon: Map,
+        name: "Reports",
+        url: "/dashboard/reports", 
+        icon: Proportions,
       },
     ],
     navSecondary: [
       {
-        title: "Support",
-        url: "/dashboard/support",
-        icon: LifeBuoy,
+        title: "Help",
+        url: "/dashboard/help",
+        icon: CircleQuestionMark,
       },
       {
-        title: "Feedback",
-        url: "/dashboard/feedback",
-        icon: Send,
+        title: "About", 
+        url: "/dashboard/about",
+        icon: Info,
       },
     ],
   }
-
   return (
     <Sidebar variant="inset" className="sidebar" {...props}>
       <SidebarHeader>
@@ -158,11 +162,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <Link to="/dashboard">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Cog className="size-4" />
+                  <Leaf  className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium text-sidebar-foreground dark:text-white">FixIt</span>
-                  <span className="truncate text-xs text-muted-foreground dark:text-gray-400">Upang </span>
+                  <span className="truncate font-medium text-sidebar-foreground dark:text-white">Plant-Identifier</span>
+                  <span className="truncate text-xs text-muted-foreground dark:text-gray-400">Admin Dashboard</span>
                 </div>
               </Link>
             </SidebarMenuButton>

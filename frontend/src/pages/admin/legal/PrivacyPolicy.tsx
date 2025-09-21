@@ -472,7 +472,7 @@ const PrivacyPolicy: React.FC = () => {
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                       <h3 className="font-medium text-gray-800 mb-3">Postal Address</h3>
                       <div className="text-sm text-gray-600">
-                        <p>FixIT</p>
+                        <p>plant-Identifier</p>
                         <p>Attn: Privacy Officer</p>
                         <p> Arellano St, Downtown District</p>
                         <p>Dagupan City, Pangasinan, 2400</p>

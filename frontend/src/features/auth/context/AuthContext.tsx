@@ -93,31 +93,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Try to refresh the token to verify it's still valid
           const newToken = await authService.refreshToken();
           if (newToken) {
-            // Token is valid, but we need to get the actual user data
-            // Since we don't have a user profile endpoint yet, we'll decode the token or use stored user data
-            // For now, let's check if we have stored user data from the last login
-            const storedUserData = localStorage.getItem('userData') || sessionStorage.getItem('userData');
+            // Get storage type based on remember me preference
+            const rememberMe = authService.getRememberMeStatus();
+            const storage = rememberMe ? localStorage : sessionStorage;
+            const storedUserData = storage.getItem('userData');
+            
             if (storedUserData) {
               try {
                 const userData = JSON.parse(storedUserData);
                 dispatch({ type: 'SET_USER', payload: userData });
               } catch {
-                // If stored data is invalid, clear authentication
                 await authService.logout();
                 dispatch({ type: 'SET_USER', payload: null });
               }
-            } else {
-              // No stored user data, clear authentication
-              await authService.logout();
-              dispatch({ type: 'SET_USER', payload: null });
             }
           } else {
-            // Token refresh failed, clear authentication
             await authService.logout();
             dispatch({ type: 'SET_USER', payload: null });
           }
         } catch (error) {
-          // Token is invalid, clear it
           await authService.logout();
           dispatch({ type: 'SET_USER', payload: null });
         }
@@ -127,13 +121,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
+  // Set up periodic token refresh check
+  useEffect(() => {
+    const checkTokenExpiry = () => {
+      if (state.isAuthenticated && !authService.getAccessToken()) {
+        // Token has expired and wasn't refreshed
+        logout();
+      }
+    };
+
+    // Check every minute
+    const interval = setInterval(checkTokenExpiry, 60000);
+    
+    return () => clearInterval(interval);
+  }, [state.isAuthenticated]);
+
   const login = async (email: string, password: string, rememberMe = false): Promise<boolean> => {
     dispatch({ type: 'LOGIN_START' });
     
     try {
       const response = await authService.login({ email, password, rememberMe });
       
-      // Store user data for persistence across page refreshes
+      // Store user data based on remember me preference
       const storage = rememberMe ? localStorage : sessionStorage;
       storage.setItem('userData', JSON.stringify(response.user));
       
@@ -151,9 +160,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     await authService.logout();
-    // Clear stored user data
-    localStorage.removeItem('userData');
-    sessionStorage.removeItem('userData');
     dispatch({ type: 'LOGOUT' });
   };
 

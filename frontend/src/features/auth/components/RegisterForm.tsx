@@ -103,7 +103,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           transition={{ delay: 0.3, duration: 0.5 }}
           className="text-gray-600 dark:text-gray-400"
         >
-          Join us and let's FixIT!
+          Join us and let's Plant-identifier!
         </motion.p>
       </div>
 

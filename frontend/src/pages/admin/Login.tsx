@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { LoginForm } from '@/features/auth/components/loginForm';
 import type { AuthResponse } from '@/features/auth/models/auth.types';
-import { GalleryVerticalEnd } from 'lucide-react';
+import { Sprout  } from 'lucide-react';
 import { ModeToggle } from "@/components/mode-toggle";
 
 export const LoginPage: React.FC = () => {
@@ -101,9 +101,9 @@ export const LoginPage: React.FC = () => {
         <div className="flex items-center justify-center mb-6">
           <div className="no-underline flex items-center gap-3 font-medium text-gray-900 dark:text-white text-lg">
             <div className="bg-primary text-primary-foreground flex items-center justify-center w-8 h-8 rounded-md">
-              <GalleryVerticalEnd className="w-5 h-5" />
+              <Sprout  className="w-5 h-5" />
             </div>
-            Fixit Inc.
+            Plant-Identifier Inc.
           </div>
         </div>
         </motion.div>

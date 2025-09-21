@@ -1,206 +1,233 @@
-"use client"
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { TrendingUp, Users, Leaf, Clock } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  LineChart, 
-  Line,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
-} from 'recharts'
+// Mock data for plant identification analytics
+const dailyActivityData = [
+  { day: 'Mon', identifications: 1200, users: 450 },
+  { day: 'Tue', identifications: 1450, users: 520 },
+  { day: 'Wed', identifications: 1650, users: 580 },
+  { day: 'Thu', identifications: 1380, users: 490 },
+  { day: 'Fri', identifications: 1820, users: 640 },
+  { day: 'Sat', identifications: 2100, users: 720 },
+  { day: 'Sun', identifications: 1900, users: 680 }
+];
+
+const weeklyTrendData = [
+  { week: 'Week 1', identifications: 8500, accuracy: 94.2 },
+  { week: 'Week 2', identifications: 9200, accuracy: 94.8 },
+  { week: 'Week 3', identifications: 10100, accuracy: 95.1 },
+  { week: 'Week 4', identifications: 11300, accuracy: 95.6 }
+];
+
+const mostIdentifiedPlants = [
+  { name: 'Monstera', count: 2847, percentage: 18.5 },
+  { name: 'Snake Plant', count: 2156, percentage: 14.0 },
+  { name: 'Pothos', count: 1923, percentage: 12.5 },
+  { name: 'Fiddle Leaf', count: 1634, percentage: 10.6 },
+  { name: 'Rubber Plant', count: 1201, percentage: 7.8 },
+  { name: 'Others', count: 5639, percentage: 36.6 }
+];
+
+const peakUsageData = [
+  { hour: '6 AM', usage: 12 },
+  { hour: '8 AM', usage: 45 },
+  { hour: '10 AM', usage: 78 },
+  { hour: '12 PM', usage: 125 },
+  { hour: '2 PM', usage: 156 },
+  { hour: '4 PM', usage: 134 },
+  { hour: '6 PM', usage: 98 },
+  { hour: '8 PM', usage: 67 },
+  { hour: '10 PM', usage: 34 }
+];
+
+const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#6b7280'];
 
 export function DashboardCharts() {
-  // Sample data for charts
-  const categoryData = [
-    { name: 'Technical', value: 45, color: '#3B82F6' },
-    { name: 'Account', value: 25, color: '#EF4444' },
-    { name: 'Feature Request', value: 20, color: '#10B981' },
-    { name: 'General', value: 10, color: '#F59E0B' }
-  ]
-
-  const departmentData = [
-    { department: 'IT', issues: 28, resolved: 22 },
-    { department: 'HR', issues: 15, resolved: 12 },
-    { department: 'Finance', issues: 12, resolved: 10 },
-    { department: 'Marketing', issues: 8, resolved: 6 },
-    { department: 'Sales', issues: 18, resolved: 14 }
-  ]
-
-  const trendData = [
-    { month: 'Jan', thisMonth: 45, lastMonth: 38 },
-    { month: 'Feb', thisMonth: 52, lastMonth: 45 },
-    { month: 'Mar', thisMonth: 48, lastMonth: 52 },
-    { month: 'Apr', thisMonth: 61, lastMonth: 48 },
-    { month: 'May', thisMonth: 55, lastMonth: 61 },
-    { month: 'Jun', thisMonth: 67, lastMonth: 55 }
-  ]
-
-  const resolutionTrendData = [
-    { week: 'Week 1', resolved: 12, created: 15 },
-    { week: 'Week 2', resolved: 18, created: 12 },
-    { week: 'Week 3', resolved: 14, created: 16 },
-    { week: 'Week 4', resolved: 22, created: 18 }
-  ]
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">Analytics & Insights</h2>
-      </div>
-      
-      {/* First Row - Pie Chart and Bar Chart */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Issue Categories Pie Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
-              Issues by Category
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              {categoryData.map((item, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <div 
-                    className="h-3 w-3 rounded-full" 
-                    style={{ backgroundColor: item.color }}
-                  ></div>
-                  <span className="text-sm text-gray-600">{item.name}: {item.value}%</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Department Issues Bar Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-green-600 rounded-full"></div>
-              Issues by Department
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={departmentData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="department" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="issues" fill="#EF4444" name="Total Issues" />
-                <Bar dataKey="resolved" fill="#10B981" name="Resolved" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Second Row - Trend Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Monthly Comparison Line Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-purple-600 rounded-full"></div>
-              Monthly Trend Comparison
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="thisMonth" 
-                  stroke="#8B5CF6" 
-                  strokeWidth={3}
-                  name="This Year"
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+      {/* Daily Activity Chart */}
+      <Card className="bg-card dark:bg-card border-border dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-foreground dark:text-white">
+            <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+            Daily Activity
+          </CardTitle>
+          <CardDescription className="text-muted-foreground dark:text-gray-300">
+            Plant identifications and active users this week
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer
+            config={{
+              identifications: {
+                label: "Identifications",
+                color: "hsl(var(--primary))",
+              },
+              users: {
+                label: "Active Users",
+                color: "hsl(var(--secondary))",
+              },
+            }}
+            className="h-[200px] w-full"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dailyActivityData}>
+                <defs>
+                  <linearGradient id="colorIdentifications" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="day" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: 'currentColor' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="lastMonth" 
-                  stroke="#6B7280" 
+                <YAxis hide />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area
+                  type="monotone"
+                  dataKey="identifications"
+                  stroke="hsl(var(--primary))"
                   strokeWidth={2}
-                  strokeDasharray="5 5"
-                  name="Last Year"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Resolution Trend Area Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-orange-600 rounded-full"></div>
-              Weekly Resolution Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={resolutionTrendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="created" 
-                  stackId="1"
-                  stroke="#F59E0B" 
-                  fill="#FEF3C7"
-                  name="Created"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="resolved" 
-                  stackId="1"
-                  stroke="#10B981" 
-                  fill="#D1FAE5"
-                  name="Resolved"
+                  fill="url(#colorIdentifications)"
+                  animationDuration={800}
                 />
               </AreaChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      {/* Most Identified Plants */}
+      <Card className="bg-card dark:bg-card border-border dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-foreground dark:text-white">
+            <Leaf className="h-5 w-5 text-green-600 dark:text-green-400" />
+            Most Identified Plants
+          </CardTitle>
+          <CardDescription className="text-muted-foreground dark:text-gray-300">
+            Top plant species identified this month
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {mostIdentifiedPlants.slice(0, 5).map((plant, index) => (
+              <div key={plant.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: COLORS[index] }}
+                  />
+                  <span className="font-medium text-foreground dark:text-white text-sm">
+                    {plant.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground dark:text-gray-400">
+                    {plant.count.toLocaleString()}
+                  </span>
+                  <span className="text-sm font-medium text-foreground dark:text-white">
+                    {plant.percentage}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Weekly Trends */}
+      <Card className="bg-card dark:bg-card border-border dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-foreground dark:text-white">
+            <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            Weekly Trends
+          </CardTitle>
+          <CardDescription className="text-muted-foreground dark:text-gray-300">
+            Identification volume and accuracy trends
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer
+            config={{
+              identifications: {
+                label: "Identifications",
+                color: "hsl(var(--chart-2))",
+              },
+            }}
+            className="h-[200px] w-full"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyTrendData}>
+                <XAxis 
+                  dataKey="week" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: 'currentColor' }}
+                />
+                <YAxis hide />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar
+                  dataKey="identifications"
+                  fill="hsl(var(--chart-2))"
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={600}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      {/* Peak Usage Times */}
+      <Card className="bg-card dark:bg-card border-border dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-foreground dark:text-white">
+            <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            Peak Usage Times
+          </CardTitle>
+          <CardDescription className="text-muted-foreground dark:text-gray-300">
+            Hourly usage patterns throughout the day
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer
+            config={{
+              usage: {
+                label: "Usage",
+                color: "hsl(var(--chart-3))",
+              },
+            }}
+            className="h-[200px] w-full"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={peakUsageData}>
+                <XAxis 
+                  dataKey="hour" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: 'currentColor' }}
+                />
+                <YAxis hide />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line
+                  type="monotone"
+                  dataKey="usage"
+                  stroke="hsl(var(--chart-3))"
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--chart-3))", strokeWidth: 2, r: 4 }}
+                  animationDuration={800}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

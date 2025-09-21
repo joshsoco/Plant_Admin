@@ -3,8 +3,17 @@
 import type { LoginCredentials, AuthResponse } from '../models/auth.types';
 import { AuthError } from '../models/auth.types';
 
+interface TokenData {
+  accessToken: string;
+  refreshToken: string;
+  rememberMe: boolean;
+  expiresIn: number;
+  issuedAt: number;
+}
+
 class AuthService {
   private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  private tokenRefreshTimer: NodeJS.Timeout | null = null;
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
@@ -16,6 +25,7 @@ class AuthService {
         body: JSON.stringify({
           email: credentials.email,
           password: credentials.password,
+          rememberMe: credentials.rememberMe || false,
         }),
       });
 
@@ -26,14 +36,17 @@ class AuthService {
 
       const data: AuthResponse = await response.json();
       
-      // Store tokens
-      if (credentials.rememberMe) {
-        localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
-      } else {
-        sessionStorage.setItem('accessToken', data.accessToken);
-        sessionStorage.setItem('refreshToken', data.refreshToken);
-      }
+      // Store tokens with metadata
+      const tokenData: TokenData = {
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        rememberMe: credentials.rememberMe || false,
+        expiresIn: data.expiresIn || 3600,
+        issuedAt: Date.now()
+      };
+
+      this.storeTokens(tokenData);
+      this.scheduleTokenRefresh(tokenData);
 
       return data;
     } catch (error) {
@@ -44,62 +57,57 @@ class AuthService {
     }
   }
 
-  async register(credentials: { email: string; password: string; username?: string }): Promise<{ message: string }> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/auth/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password,
-          username: credentials.username || credentials.email,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new AuthError(errorData.error || 'Registration failed');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      if (error instanceof AuthError) {
-        throw error;
-      }
-      throw new AuthError('Network error. Please try again.');
+  private storeTokens(tokenData: TokenData): void {
+    const tokenString = JSON.stringify(tokenData);
+    
+    if (tokenData.rememberMe) {
+      // Store in localStorage for persistence across browser sessions
+      localStorage.setItem('tokenData', tokenString);
+      sessionStorage.removeItem('tokenData');
+    } else {
+      // Store in sessionStorage (cleared when browser closes)
+      sessionStorage.setItem('tokenData', tokenString);
+      localStorage.removeItem('tokenData');
     }
   }
 
-  async logout(): Promise<void> {
+  private getTokenData(): TokenData | null {
     try {
-      const token = this.getAccessToken();
-      const refreshToken = this.getRefreshToken();
+      const tokenString = localStorage.getItem('tokenData') || sessionStorage.getItem('tokenData');
+      if (!tokenString) return null;
       
-      if (token && refreshToken) {
-        await fetch(`${this.baseUrl}/api/auth/logout/`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
+      const tokenData: TokenData = JSON.parse(tokenString);
+      
+      // Check if token has expired based on stored metadata
+      const now = Date.now();
+      const tokenAge = (now - tokenData.issuedAt) / 1000; // in seconds
+      
+      if (tokenAge > tokenData.expiresIn) {
+        this.clearTokens();
+        return null;
       }
-    } catch (error) {
-      console.warn('Logout API call failed:', error);
-    } finally {
-      // Clear tokens regardless of API call success
+      
+      return tokenData;
+    } catch {
       this.clearTokens();
+      return null;
     }
+  }
+
+  getAccessToken(): string | null {
+    const tokenData = this.getTokenData();
+    return tokenData?.accessToken || null;
+  }
+
+  getRefreshToken(): string | null {
+    const tokenData = this.getTokenData();
+    return tokenData?.refreshToken || null;
   }
 
   async refreshToken(): Promise<string | null> {
-    const refreshToken = this.getRefreshToken();
+    const tokenData = this.getTokenData();
     
-    if (!refreshToken) {
+    if (!tokenData?.refreshToken) {
       return null;
     }
 
@@ -109,7 +117,7 @@ class AuthService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken }),
+        body: JSON.stringify({ refreshToken: tokenData.refreshToken }),
       });
 
       if (!response.ok) {
@@ -118,39 +126,80 @@ class AuthService {
       }
 
       const data = await response.json();
-      const newAccessToken = data.accessToken;
+      
+      // Update stored token data
+      const newTokenData: TokenData = {
+        ...tokenData,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken || tokenData.refreshToken,
+        issuedAt: Date.now()
+      };
 
-      // Update stored token
-      if (localStorage.getItem('accessToken')) {
-        localStorage.setItem('accessToken', newAccessToken);
-      } else {
-        sessionStorage.setItem('accessToken', newAccessToken);
-      }
+      this.storeTokens(newTokenData);
+      this.scheduleTokenRefresh(newTokenData);
 
-      return newAccessToken;
+      return data.accessToken;
     } catch (error) {
       this.clearTokens();
       return null;
     }
   }
 
-  getAccessToken(): string | null {
-    return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+  private scheduleTokenRefresh(tokenData: TokenData): void {
+    // Clear existing timer
+    if (this.tokenRefreshTimer) {
+      clearTimeout(this.tokenRefreshTimer);
+    }
+
+    // Schedule refresh 5 minutes before expiration
+    const refreshTime = (tokenData.expiresIn - 300) * 1000; // 5 minutes before expiry
+    
+    if (refreshTime > 0) {
+      this.tokenRefreshTimer = setTimeout(async () => {
+        await this.refreshToken();
+      }, refreshTime);
+    }
   }
 
-  getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
+  async logout(): Promise<void> {
+    try {
+      const tokenData = this.getTokenData();
+      
+      if (tokenData?.accessToken && tokenData?.refreshToken) {
+        await fetch(`${this.baseUrl}/api/auth/logout/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${tokenData.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken: tokenData.refreshToken }),
+        });
+      }
+    } catch (error) {
+      console.warn('Logout API call failed:', error);
+    } finally {
+      this.clearTokens();
+      if (this.tokenRefreshTimer) {
+        clearTimeout(this.tokenRefreshTimer);
+        this.tokenRefreshTimer = null;
+      }
+    }
+  }
+
+  private clearTokens(): void {
+    localStorage.removeItem('tokenData');
+    sessionStorage.removeItem('tokenData');
+    localStorage.removeItem('userData');
+    sessionStorage.removeItem('userData');
   }
 
   isAuthenticated(): boolean {
     return !!this.getAccessToken();
   }
 
-  private clearTokens(): void {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    sessionStorage.removeItem('accessToken');
-    sessionStorage.removeItem('refreshToken');
+  getRememberMeStatus(): boolean {
+    const tokenData = this.getTokenData();
+    return tokenData?.rememberMe || false;
   }
 
   // Password Reset Methods

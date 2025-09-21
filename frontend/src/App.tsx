@@ -12,13 +12,10 @@ import { VerifyOtp } from '@/features/auth/components/VerifyOtp';
 import PrivacyPolicy from './pages/admin/legal/PrivacyPolicy';
 import TermsOfService from './pages/admin/legal/TermsOfServices';
 import Dashboard from './pages/admin/dashboard/Page';
-import ChatLogs from '@/features/chat/components/ChatLogs';
-import { SupportForm } from '@/features/support/components/SupportForm';
-import { FeedbackForm } from '@/features/support/components/FeedbackForm';
-import ReportPage from '@/features/report/components/ReportPage';
 import { ThemeProvider } from "@/components/theme-provider";
+import Help from "@/pages/admin/help";
+import About from "@/pages/admin/AboutUs";
 
-// Component to handle authenticated redirects for login/register
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   
@@ -99,10 +96,8 @@ const AppRoutes: React.FC = () => {
         }
       >
         <Route index element={<DashboardHome />} />
-        <Route path="chat" element={<ChatLogs />} />
-        <Route path="reports" element={<ReportPage />} />
-        <Route path="support" element={<SupportForm />} />
-        <Route path="feedback" element={<FeedbackForm />} />
+        <Route path="/dashboard/help" element={<Help />} />
+        <Route path="/dashboard/about" element={<About />} />
       </Route>
       
       {/* Root redirect */}

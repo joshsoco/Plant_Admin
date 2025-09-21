@@ -5,7 +5,10 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from datetime import timedelta
+from django.conf import settings
 from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -52,6 +55,7 @@ class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
+        remember_me = request.data.get('rememberMe', False)
         
         # Try to find user by email
         try:
@@ -64,13 +68,27 @@ class LoginView(APIView):
         user = authenticate(username=username, password=password)
         
         if user is not None:
+            # Create refresh token with custom lifetime based on remember_me
             refresh = RefreshToken.for_user(user)
+            
+            # Extend refresh token lifetime if remember_me is True
+            if remember_me:
+                refresh.set_exp(lifetime=timedelta(days=30))  # 30 days
+                # Set session to persist across browser restarts
+                request.session.set_expiry(60 * 60 * 24 * 30)  # 30 days
+            else:
+                refresh.set_exp(lifetime=timedelta(days=7))   # 7 days default
+                # Set session to expire when browser closes
+                request.session.set_expiry(0)
+            
             # Create full name from first_name and last_name
             full_name = f"{user.first_name} {user.last_name}".strip()
-            # If no first_name or last_name, fall back to username
             if not full_name:
                 full_name = user.username
                 
+            # Store remember_me preference in session
+            request.session['remember_me'] = remember_me
+            
             return Response({
                 'user': {
                     'id': str(user.id),
@@ -78,13 +96,14 @@ class LoginView(APIView):
                     'name': full_name,
                     'firstName': user.first_name,
                     'lastName': user.last_name,
-                    'role': 'user'  # You can customize this based on your user model
+                    'role': 'user'
                 },
                 'accessToken': str(refresh.access_token),
                 'refreshToken': str(refresh),
+                'rememberMe': remember_me,
+                'expiresIn': 60 * 60 if not remember_me else 60 * 60 * 24 * 30  # seconds
             })
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
 class LogoutView(APIView):
     def post(self, request):
         try:
@@ -97,17 +116,21 @@ class LogoutView(APIView):
             
             token = RefreshToken(refresh_token)
             
-            # Try to blacklist the token
+            # Blacklist the token
             try:
                 token.blacklist()
             except AttributeError:
-                # Blacklisting not available, but we can still "logout" on frontend
                 pass
+            
+            # Clear session data
+            request.session.flush()
                 
             return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
             
         except Exception as e:
             print(f"Logout error: {e}")
+            # Still clear session even if token blacklisting fails
+            request.session.flush()
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
 class RefreshTokenView(APIView):
@@ -153,7 +176,7 @@ class ForgotPasswordView(APIView):
         reset_code = PasswordResetCode.generate_code(user)
         
         # Send email with HTML template
-        subject = 'Password Reset Code - FixIT'
+        subject = 'Password Reset Code - Plant-Identifier'
         
         # HTML email template with inline CSS for compatibility
         html_message = f'''
@@ -178,7 +201,7 @@ class ForgotPasswordView(APIView):
             <h2 style="margin: 0 0 16px 0; color: #1a202c; font-size: 20px; font-weight: 600;">Hello {user.first_name or user.username},</h2>
             
             <p style="margin: 0 0 24px 0; color: #4a5568; font-size: 16px;">
-                We received a request to reset your password for your FixIT account. Use the verification code below to complete your password reset:
+                We received a request to reset your password for your Plant-identifier account. Use the verification code below to complete your password reset:
             </p>
             
             <!-- Verification Code Block -->
@@ -192,7 +215,7 @@ class ForgotPasswordView(APIView):
             
             <div style="background: #fef5e7; border-left: 4px solid #f6ad55; padding: 16px; border-radius: 6px; margin: 24px 0;">
                 <p style="margin: 0; color: #744210; font-size: 14px;">
-                    <strong>Security tip:</strong> Never share this code with anyone. FixIT will never ask for your verification code.
+                    <strong>Security tip:</strong> Never share this code with anyone. Plant-identifier will never ask for your verification code.
                 </p>
             </div>
             
@@ -207,7 +230,7 @@ class ForgotPasswordView(APIView):
                 If you didn't request this password reset, please ignore this email and your password will remain unchanged.
             </p>
             <p style="margin: 0; color: #a0aec0; font-size: 12px; text-align: center;">
-                © 2025 FixIT. All rights reserved.
+                © 2025 Plant-identifier. All rights reserved.
             </p>
         </div>
     </div>
@@ -228,7 +251,7 @@ class ForgotPasswordView(APIView):
         text_message = f'''
 Hello {user.first_name or user.username},
 
-You requested a password reset for your FixIT account.
+You requested a password reset for your Plant-identifier account.
 
 Your verification code is: {reset_code.code}
 
@@ -237,7 +260,7 @@ This code will expire in 10 minutes.
 If you didn't request this reset, please ignore this email.
 
 Best regards,
-FixIT Team
+Plant-identifier Team
         '''
         
         try:

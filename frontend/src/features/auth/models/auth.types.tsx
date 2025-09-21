@@ -13,6 +13,13 @@ export interface LoginCredentials {
   avatar?: string;
   role: string;
   }
+  export interface AuthResponse {
+  user: AuthUser;
+  accessToken: string;
+  refreshToken: string;
+  rememberMe?: boolean;
+  expiresIn?: number;
+}
   
   export interface AuthResponse {
     user: AuthUser;
