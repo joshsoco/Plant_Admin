@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/sidebar"
 import { DashboardMetrics } from "@/components/dashboard/DashboardMetrics"
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts"
-import { ModeToggle } from "@/components/mode-toggle";
+import { AdminToolsQuickLinks } from '@/components/dashboard/AdminToolsQuickLinks';
+
 
 export default function Page() {
   const location = useLocation()
@@ -49,14 +50,12 @@ export default function Page() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="px-4">
-            <ModeToggle />
-          </div>
         </header>
         
         {isRootDashboard ? (
           <div className="flex flex-1 flex-col gap-4 p-3 sm:p-4 pt-0 space-y-6">
             <DashboardMetrics />
+            <AdminToolsQuickLinks />
             <DashboardCharts />
           </div>
         ) : (

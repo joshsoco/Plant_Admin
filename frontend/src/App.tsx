@@ -13,6 +13,7 @@ import PrivacyPolicy from './pages/admin/legal/PrivacyPolicy';
 import TermsOfService from './pages/admin/legal/TermsOfServices';
 import Dashboard from './pages/admin/dashboard/Page';
 import { ThemeProvider } from "@/components/theme-provider";
+import { MotionProvider } from "@/contexts/MotionContext";
 import Help from "@/pages/admin/help";
 import About from "@/pages/admin/AboutUs";
 
@@ -117,11 +118,13 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <AppRoutes />
-        </div>
-      </AuthProvider>
+      <MotionProvider>
+        <AuthProvider>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            <AppRoutes />
+          </div>
+        </AuthProvider>
+      </MotionProvider>
     </ThemeProvider>
   );
 };

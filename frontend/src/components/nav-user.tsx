@@ -1,5 +1,5 @@
 "use client"
-
+import React, { useState } from "react"
 import {
   Settings ,
   Bell,
@@ -29,11 +29,20 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { ProfileDialog } from "@/components/ProfileDialog";
+import { ThemeDisplayDialog } from "@/components/ThemeDisplayDialog";
+import { AdminSettingsDialog } from '@/components/AdminSettingsDialog';
+import { NotificationDialog } from '@/components/NotificationsDialog';
 import { useAuth } from "@/features/auth/context/AuthContext"
 
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { user, logout } = useAuth()
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false); 
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false); // Add this line
+
 
   const generateInitials = (firstName?: string, lastName?: string, fallbackName?: string): string => {
     // Use firstName and lastName if both are available
@@ -122,22 +131,29 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setProfileOpen(true)} className="cursor-pointer">
                 <UserRoundPen />
                 My Profile
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setSettingsOpen(true)}
+                className="cursor-pointer">
                 <Settings  />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setThemeDialogOpen(true)}
+                className="cursor-pointer"
+              >
                 <Palette  />
                 Theme & Display
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+              onClick={() => setNotificationsOpen(true)}
+              className="cursor-pointer">
                 <Bell />
                 Notifications
               </DropdownMenuItem>
@@ -150,6 +166,10 @@ export function NavUser() {
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      <AdminSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <NotificationDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
+      <ThemeDisplayDialog open={themeDialogOpen} onOpenChange={setThemeDialogOpen} />
     </SidebarMenu>
   )
 }

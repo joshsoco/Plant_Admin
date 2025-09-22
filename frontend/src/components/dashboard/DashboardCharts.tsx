@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { TrendingUp, Users, Leaf, Clock } from 'lucide-react';
+import { useMotion } from '@/contexts/MotionContext';
 
 // Mock data for plant identification analytics
 const dailyActivityData = [
@@ -46,6 +47,8 @@ const peakUsageData = [
 const COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#6b7280'];
 
 export function DashboardCharts() {
+  const { shouldReduceMotion } = useMotion();
+  
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
       {/* Daily Activity Chart */}
@@ -95,7 +98,8 @@ export function DashboardCharts() {
                   stroke="hsl(var(--primary))"
                   strokeWidth={2}
                   fill="url(#colorIdentifications)"
-                  animationDuration={800}
+                  animationDuration={shouldReduceMotion ? 0 : 800}
+                  isAnimationActive={!shouldReduceMotion}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -176,7 +180,8 @@ export function DashboardCharts() {
                   dataKey="identifications"
                   fill="hsl(var(--chart-2))"
                   radius={[4, 4, 0, 0]}
-                  animationDuration={600}
+                  animationDuration={shouldReduceMotion ? 0 : 600}
+                  isAnimationActive={!shouldReduceMotion}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -221,7 +226,8 @@ export function DashboardCharts() {
                   stroke="hsl(var(--chart-3))"
                   strokeWidth={3}
                   dot={{ fill: "hsl(var(--chart-3))", strokeWidth: 2, r: 4 }}
-                  animationDuration={800}
+                  animationDuration={shouldReduceMotion ? 0 : 800}
+                  isAnimationActive={!shouldReduceMotion}
                 />
               </LineChart>
             </ResponsiveContainer>

@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLoginViewModel } from '../hooks/useLoginViewModel';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useReducedMotion } from '@/contexts/MotionContext';
 
 interface LoginFormProps {
   onSuccess?: (data: any) => void;
@@ -24,9 +25,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 }) => {
   const { viewModel, actions } = useLoginViewModel();
   const [showPassword, setShowPassword] = React.useState(false);
+  const reduceMotion = useReducedMotion();
   
   // Add email validation state
   const [isValidEmail, setIsValidEmail] = React.useState(false);
+
+  // Helper function to conditionally apply motion props
+  const getMotionProps = (animationProps: any) => {
+    if (reduceMotion) {
+      return { initial: false, animate: false, transition: { duration: 0 } };
+    }
+    return animationProps;
+  };
 
   // Add email validation effect
   React.useEffect(() => {
@@ -70,9 +80,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+      animate={reduceMotion ? false : { opacity: 1, y: 0 }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.5 }}
       className={`w-full max-w-md space-y-6 ${className}`}
     >
       <div className="text-center space-y-2">
@@ -235,9 +245,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
         {/* Remember Me and Forgot Password (unchanged) */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
+          initial={reduceMotion ? false : { opacity: 0, x: -20 }}
+          animate={reduceMotion ? false : { opacity: 1, x: 0 }}
+          transition={reduceMotion ? { duration: 0 } : { delay: 0.6, duration: 0.5 }}
           className="flex items-center justify-between"
         >
           <div className="flex items-center space-x-2">
