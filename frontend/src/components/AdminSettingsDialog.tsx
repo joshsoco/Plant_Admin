@@ -159,9 +159,9 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
   // App version and system info
   const systemInfo = {
     version: '2.1.0',
-    buildDate: 'December 28, 2024',
+    buildDate: 'September 10, 2025',
     environment: 'Production',
-    lastUpdate: 'December 25, 2024',
+    lastUpdate: 'September 23, 2025',
     uptime: '15 days, 8 hours',
     databaseVersion: 'SQLite 3.45.0'
   };

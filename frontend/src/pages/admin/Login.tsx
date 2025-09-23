@@ -123,11 +123,22 @@ export const LoginPage: React.FC = () => {
           transition={{ delay: 1, duration: 0.5 }}
           className="text-center mt-6"
         >
-          <div className="text-center text-black/80 dark:text-white/80 text-sm text-balance">
-            By clicking continue, you agree to our <a href="/ToS" className="underline">Terms of Service</a>{" "}
-            and <a href="/Privacy-policy" className="underline">Privacy Policy</a>.
+          <div className="text-center text-foreground dark:text-foreground text-sm text-balance">
+            By clicking continue, you agree to our{" "}
+            <a 
+              href="/terms" 
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline underline-offset-2"
+            >
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a 
+              href="/privacy" 
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline underline-offset-2"
+            >
+              Privacy Policy
+            </a>.
           </div>
-          
         </motion.div>
       </motion.div>
 

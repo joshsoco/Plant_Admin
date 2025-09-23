@@ -142,7 +142,7 @@ const cardVariants: Variants = {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center justify-center w-16 h-16 bg-black dark:bg-blue-900/30 rounded-full mx-auto mb-4"
+          className="flex items-center justify-center w-16 h-16 bg-blue-600 dark:bg-blue-900/30 rounded-full mx-auto mb-4"
         >
           <KeyRound className="w-8 h-8 text-blue-600 dark:text-blue-400" />
         </motion.div>

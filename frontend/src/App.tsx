@@ -12,6 +12,8 @@ import { VerifyOtp } from '@/features/auth/components/VerifyOtp';
 import PrivacyPolicy from './pages/admin/legal/PrivacyPolicy';
 import TermsOfService from './pages/admin/legal/TermsOfServices';
 import Dashboard from './pages/admin/dashboard/Page';
+import PlantIdentifications from "@/pages/admin/PlantIdentification";
+import AnalyticsPlant from "@/pages/admin/AnalyticsPlant";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MotionProvider } from "@/contexts/MotionContext";
 import Help from "@/pages/admin/help";
@@ -96,6 +98,23 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       >
+        {/* ...other routes... */}
+        <Route
+        path="/dashboard/identifications"
+        element={
+          <ProtectedRoute>
+            <PlantIdentifications />
+          </ProtectedRoute>
+        }
+        />
+        <Route
+        path="/dashboard/analytics-plants"
+        element={
+        <ProtectedRoute>
+          <AnalyticsPlant />
+        </ProtectedRoute>
+        }
+        />
         <Route index element={<DashboardHome />} />
         <Route path="/dashboard/help" element={<Help />} />
         <Route path="/dashboard/about" element={<About />} />

@@ -123,20 +123,20 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md mx-auto"
       >
-        <Card>
+        <Card className="bg-white dark:bg-gray-900">
           <CardContent className="pt-8 pb-6 text-center">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6"
+              className="w-16 h-16 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6"
             >
-              <CheckCircle className="w-8 h-8 text-green-600" />
+              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </motion.div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
+            <h3 className="text-xl font-semibold text-foreground dark:text-white mb-2">
               Password Reset Successful
             </h3>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground dark:text-gray-400 text-sm">
               Your password has been successfully reset. You will be redirected to the login page.
             </p>
           </CardContent>
@@ -151,15 +151,15 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-md mx-auto"
     >
-      <Card>
+      <Card className="bg-white dark:bg-gray-900">
         <CardHeader className="space-y-1 pb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-              <Lock className="w-5 h-5 text-muted-foreground" />
+            <div className="w-10 h-10 bg-muted dark:bg-gray-700 rounded-lg flex items-center justify-center">
+              <Lock className="w-5 h-5 text-muted-foreground dark:text-gray-400" />
             </div>
             <div>
-              <CardTitle className="text-xl">Reset Password</CardTitle>
-              <CardDescription className="text-sm">
+              <CardTitle className="text-xl text-foreground dark:text-white">Reset Password</CardTitle>
+              <CardDescription className="text-sm text-muted-foreground dark:text-gray-400">
                 Create a new secure password for your account
               </CardDescription>
             </div>
@@ -177,7 +177,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
 
             {/* New Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">
+              <Label htmlFor="password" className="text-sm font-medium text-foreground dark:text-white">
                 New Password
               </Label>
               <div className="relative">
@@ -198,9 +198,9 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                   )}
                 </Button>
               </div>
@@ -215,7 +215,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
 
             {/* Confirm Password Field */}
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground dark:text-white">
                 Confirm Password
               </Label>
               <div className="relative">
@@ -236,9 +236,9 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                   )}
                 </Button>
               </div>
@@ -246,7 +246,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
               {/* Password Match Indicator */}
               {confirmPassword && (
                 <div className={`flex items-center text-xs font-medium mt-2 ${
-                  doPasswordsMatch ? 'text-green-600' : 'text-destructive'
+                  doPasswordsMatch ? 'text-green-600 dark:text-green-400' : 'text-destructive dark:text-red-400'
                 }`}>
                   {doPasswordsMatch ? (
                     <>

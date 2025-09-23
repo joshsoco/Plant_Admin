@@ -100,7 +100,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           transition={{ delay: 0.3, duration: 0.5 }}
           className="text-gray-600 dark:text-gray-400"
         >
-          Sign in to your account to continue
+          Sign in to your Admin Account to continue
         </motion.p>
       </div>
      {viewModel.status === 'error' && (
@@ -308,10 +308,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 </div>
               )}
             </Button>
-            <p className="flex items-center justify-center mt-4 text-black/80 text-sm">
+            <p className="flex items-center justify-center mt-4 text-foreground dark:text-foreground text-sm">
               Don't have an account?{' '}
               <button 
-              className="ml-1 text-black font-semibold hover:text-bg-sky-800 underline underline-offset-3 cursor-pointer"
+              className="ml-1 text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 underline underline-offset-3 cursor-pointer"
               type="button"
               onClick={() => window.location.href = '/register'}
               >

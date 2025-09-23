@@ -44,12 +44,6 @@ const HelpPage = () => {
       link: "#analytics-reports"
     },
     {
-      icon: Users,
-      title: "User Management",
-      description: "Manage botanist accounts and user permissions",
-      link: "#user-management"
-    },
-    {
       icon: Database,
       title: "Data Management",
       description: "Import, export, and maintain plant identification data",

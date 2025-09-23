@@ -71,13 +71,6 @@ export function AdminToolsQuickLinks() {
       status: 'healthy',
       action: 'Monitor'
     },
-    {
-      title: 'User Management',
-      description: 'Manage user accounts and permissions',
-      icon: Settings,
-      status: 'active',
-      action: 'Manage'
-    }
   ];
 
   return (

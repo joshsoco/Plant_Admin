@@ -118,8 +118,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ],
       },
       {
-        title: "Analytics",
-        url: "/dashboard/analytics",
+        title: "Analytics - Plants",
+        url: "/dashboard/analytics-plants",
         icon: BarChart3,
       },
     ],
@@ -128,11 +128,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: "Plant Database",
         url: "/dashboard/database", 
         icon: BookOpen,
-      },
-      {
-        name: "User Management",
-        url: "/dashboard/users", 
-        icon: MessageSquare,
       },
       {
         name: "Reports",

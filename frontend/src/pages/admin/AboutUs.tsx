@@ -173,7 +173,7 @@ const AboutPage = () => {
             <div className="space-y-4">
               <Badge variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30">
                 <Award className="h-4 w-4 mr-2" />
-                Award-Winning Plant Identification Technology
+                Plant Identification Technology
               </Badge>
               <h1 className="text-5xl md:text-7xl font-bold leading-tight">
                 PlantScope AI
@@ -188,9 +188,12 @@ const AboutPage = () => {
               with unprecedented accuracy and speed.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <button className="bg-white text-green-700 px-8 py-4 rounded-lg font-semibold hover:bg-green-50 transition-all duration-300 flex items-center justify-center group">
-                Start Identifying Plants
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <button
+              onClick={() => window.open("https://plant-identifier-scanner.netlify.app/", "_blank", "noopener,noreferrer")}
+              className="bg-white text-green-700 px-8 py-4 rounded-lg font-semibold hover:bg-green-50 transition-all duration-300 flex items-center justify-center group cursor-pointer"
+              >
+              Start Identifying Plants
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </button>
               <button className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all duration-300">
                 Watch Demo
@@ -331,42 +334,6 @@ const AboutPage = () => {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-700 dark:to-emerald-700 rounded-3xl p-12 text-center text-white relative overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-              opacity: 0.2,
-            }}
-          ></div>
-          <div className="relative space-y-8">
-            <div className="flex justify-center">
-              <div className="p-4 bg-white/20 rounded-full">
-                <Zap className="h-16 w-16 text-green-200" />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-bold">Ready to Advance Botanical Research?</h2>
-              <p className="text-xl text-green-100 max-w-3xl mx-auto leading-relaxed">
-                Join leading research institutions and conservation organizations using PlantScope AI 
-                to accelerate plant identification and botanical discovery.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white text-green-600 px-8 py-4 rounded-lg font-semibold hover:bg-green-50 transition-all duration-300 flex items-center justify-center group">
-                <Star className="mr-2 h-5 w-5" />
-                Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all duration-300">
-                Schedule Expert Demo
-              </button>
-            </div>
           </div>
         </div>
       </div>
