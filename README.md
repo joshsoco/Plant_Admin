@@ -1,98 +1,295 @@
-# Final Project - Josh
+# Plant Identifier - Full Stack Application
 
-Full-stack web application with Django backend and React frontend.
+A comprehensive plant identification system built with Django REST Framework backend and React TypeScript frontend, featuring AI-powered plant recognition, user authentication, and admin dashboard.
 
-## Quick Start
+## 🌱 Features
+
+- **AI Plant Identification**: Upload plant images for instant species identification
+- **User Authentication**: Complete auth system with registration, login, password reset
+- **Admin Dashboard**: Comprehensive admin panel with analytics and plant management
+- **Responsive Design**: Modern UI with dark/light theme support
+- **Database Management**: Plant species database with detailed information
+- **Email Integration**: Password reset via email with verification codes
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.8+ 
+- Node.js 16+
+- npm or yarn
+- Git
+
+### Backend Setup (Django)
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd Final_proj-Josh/backend
+   ```
+
+2. **Create virtual environment**
+   ```bash
+   python -m venv venv
+   
+   # On Windows
+   venv\Scripts\activate
+   
+   # On macOS/Linux
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Environment setup**
+   ```bash
+   # Copy environment template
+   cp .env.example .env
+   
+   # Edit .env with your settings (see Environment Variables section)
+   ```
+
+5. **Database setup**
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   
+   # Create superuser (optional)
+   python manage.py createsuperuser
+   ```
+
+6. **Run development server**
+   ```bash
+   python manage.py runserver
+   ```
+   Backend will be available at `http://localhost:8000`
+
+### Frontend Setup (React + TypeScript)
+
+1. **Navigate to frontend directory**
+   ```bash
+   cd ../frontend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Environment setup**
+   ```bash
+   # Create .env file
+   echo "VITE_API_BASE_URL=http://localhost:8000" > .env
+   ```
+
+4. **Run development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+   Frontend will be available at `http://localhost:5173`
+
+## 📋 Environment Variables
+
+### Backend (.env)
+```env
+# Django Configuration
+SECRET_KEY=your-super-secret-key-here-change-this
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com
+
+# Database
+DATABASE_URL=sqlite:///db.sqlite3
+
+# Email Configuration (for password reset)
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-gmail-app-password
+DEFAULT_FROM_EMAIL=your-email@gmail.com
+
+# CORS Settings
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173
+```
+
+### Frontend (.env)
+```env
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+## 🔧 Email Configuration
+
+For password reset functionality, you'll need to configure Gmail SMTP:
+
+1. **Enable 2-Factor Authentication** on your Gmail account
+2. **Generate App Password**:
+   - Go to Google Account settings
+   - Security → 2-Step Verification → App passwords
+   - Generate password for "Mail"
+3. **Update backend/.env** with your Gmail credentials
+
+## 📁 Project Structure
+
+```
+Final_proj-Josh/
+├── backend/                    # Django REST API
+│   ├── authentication/        # User auth app
+│   ├── webproject/            # Django project settings
+│   ├── requirements.txt       # Python dependencies
+│   └── manage.py             # Django management
+├── frontend/                  # React TypeScript app
+│   ├── src/
+│   │   ├── components/       # Reusable components
+│   │   ├── features/         # Feature-based modules
+│   │   ├── pages/           # Page components
+│   │   └── ...
+│   ├── package.json         # Node dependencies
+│   └── vite.config.ts       # Vite configuration
+└── README.md
+```
+
+## 🛠 Development Commands
+
+### Backend
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Database migrations
+python manage.py makemigrations
+python manage.py migrate
+
+# Run development server
+python manage.py runserver
+
+# Run tests
+python manage.py test
+
+# Create superuser
+python manage.py createsuperuser
+```
+
+### Frontend
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Lint code
+npm run lint
+npm run lint:fix
+
+# Type checking
+npm run type-check
+```
+
+## 🚀 Deployment
+
+### Frontend (Netlify)
+1. Build the project: `npm run build`
+2. Deploy `dist` folder to Netlify
+3. Configure redirects using `public/_redirects`
+
+### Backend (Railway/Heroku)
+1. Add production environment variables
+2. Update `ALLOWED_HOSTS` in settings
+3. Configure static files serving
+4. Deploy using platform-specific instructions
+
+## 🔑 API Endpoints
+
+### Authentication
+- `POST /api/auth/register/` - User registration
+- `POST /api/auth/login/` - User login
+- `POST /api/auth/logout/` - User logout
+- `POST /api/auth/refresh/` - Refresh JWT token
+- `POST /api/auth/forgot-password/` - Request password reset
+- `POST /api/auth/verify-reset-code/` - Verify reset code
+- `POST /api/auth/reset-password/` - Reset password
+
+## 🧪 Testing
 
 ### Backend
 ```bash
 cd backend
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+python manage.py test
 ```
 
 ### Frontend
 ```bash
 cd frontend
-npm install
-npm run dev
+npm run test
 ```
 
-## Deployment
+## 📦 Dependencies
 
-- Frontend: Deployed on Netlify
-- Backend: Deploy on Railway, Heroku, or DigitalOcean
+### Backend (requirements.txt)
+- Django 5.1.3
+- djangorestframework 3.15.2
+- django-cors-headers 4.4.0
+- djangorestframework-simplejwt
+- python-decouple 3.8
 
-## Environment Variables
+### Frontend (package.json)
+- React 19.1.0
+- TypeScript 5.8.3
+- Vite 7.0.4
+- Tailwind CSS
+- Framer Motion 12.23.3
+- Radix UI components
 
-Copy `.env.example` files and update with your values.
+## 🐛 Troubleshooting
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Common Issues
 
-Currently, two official plugins are available:
+1. **CORS Errors**
+   - Ensure frontend URL is in `CORS_ALLOWED_ORIGINS`
+   - Check backend is running on correct port
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+2. **Email Not Sending**
+   - Verify Gmail App Password is correct
+   - Check 2FA is enabled on Gmail account
 
-## Expanding the ESLint configuration
+3. **Database Issues**
+   - Run `python manage.py migrate`
+   - Delete `db.sqlite3` and migrate again if needed
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+4. **Port Already in Use**
+   ```bash
+   # Kill process using port 8000 (backend)
+   lsof -ti:8000 | xargs kill -9
+   
+   # Kill process using port 5173 (frontend)
+   lsof -ti:5173 | xargs kill -9
+   ```
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 📝 License
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+This project is licensed under the MIT License.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 👥 Contributors
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- Allen Rodas - LLM & Project Manager
+- Mark Delfin - Lead Plant Vision Engineer  
+- Royal Rex - Database Curator & Taxonomist
+- Joshua Co - Front-End Developer
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
+For more information, visit our [documentation](link-to-docs) or contact the development team.

@@ -212,41 +212,7 @@ export function NotificationDialog({ open, onOpenChange }: NotificationsDialogPr
 
                   <Separator />
 
-                  {/* System Alerts */}
-                  <div>
-                    <h4 className="font-medium mb-3">System Alerts</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <label className="font-medium text-sm">System Health Alerts</label>
-                          <p className="text-xs text-muted-foreground">Notifications about system status and health</p>
-                        </div>
-                        <Button
-                          variant={notificationSettings.systemAlerts ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => updateSetting('systemAlerts', !notificationSettings.systemAlerts)}
-                        >
-                          {notificationSettings.systemAlerts ? "ON" : "OFF"}
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <label className="font-medium text-sm">Cache Status Alerts</label>
-                          <p className="text-xs text-muted-foreground">Notifications about cache performance and issues</p>
-                        </div>
-                        <Button
-                          variant={notificationSettings.cacheStatusAlerts ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => updateSetting('cacheStatusAlerts', !notificationSettings.cacheStatusAlerts)}
-                        >
-                          {notificationSettings.cacheStatusAlerts ? "ON" : "OFF"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
+                
 
                   {/* Content Moderation */}
                   <div>

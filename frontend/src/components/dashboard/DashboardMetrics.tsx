@@ -45,24 +45,13 @@ export function DashboardMetrics() {
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-50 dark:bg-orange-900/30"
     },
-    {
-      title: "System Status",
-      value: "99.7%",
-      change: "+0.2%", 
-      trend: "up",
-      description: "Uptime & Performance",
-      subtitle: "AI models operational",
-      icon: Activity,
-      color: "text-purple-600 dark:text-purple-400",
-      bgColor: "bg-purple-50 dark:bg-purple-900/30"
-    },
   ]
 
   return (
     <div className="space-y-4"> 
       
       {/* Main KPI Cards Grid */}
-      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
         {metrics.slice(0, 4).map((metric, index) => (
           <MetricCard key={index} metric={metric} />
         ))}

@@ -13,6 +13,7 @@ import PrivacyPolicy from './pages/admin/legal/PrivacyPolicy';
 import TermsOfService from './pages/admin/legal/TermsOfServices';
 import Dashboard from './pages/admin/dashboard/Page';
 import PlantIdentifications from "@/pages/admin/PlantIdentification";
+import PlantDatabase from "@/pages/admin/PlantDatabase";
 import AnalyticsPlant from "@/pages/admin/AnalyticsPlant";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MotionProvider } from "@/contexts/MotionContext";
@@ -98,6 +99,14 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       >
+        <Route
+          path="/dashboard/database"
+          element={
+            <ProtectedRoute>
+              <PlantDatabase />
+            </ProtectedRoute>
+          }
+        />
         {/* ...other routes... */}
         <Route
         path="/dashboard/identifications"

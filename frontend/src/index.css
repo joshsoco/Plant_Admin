@@ -147,3 +147,111 @@ a {
     @apply bg-background text-foreground;
   }
 }
+
+/* Enhanced sidebar styles for better responsiveness */
+@layer components {
+  .sidebar {
+    transition: width 0.2s ease-in-out, transform 0.2s ease-in-out;
+  }
+
+  /* Mobile sidebar improvements */
+  @media (max-width: 768px) {
+    [data-sidebar="sidebar"] {
+      --sidebar-width: 280px;
+    }
+    
+    .sidebar-content {
+      padding: 0.5rem;
+    }
+  }
+
+  /* Tablet responsiveness */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    [data-sidebar="sidebar"] {
+      --sidebar-width: 240px;
+    }
+  }
+
+  /* Better scroll behavior */
+  .sidebar [data-radix-scroll-area-viewport] {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .sidebar [data-radix-scroll-area-scrollbar] {
+    width: 6px;
+  }
+
+  .sidebar [data-radix-scroll-area-thumb] {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+
+  .sidebar [data-radix-scroll-area-thumb]:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  /* Collapsible animations */
+  [data-state="open"] > [data-radix-collapsible-content] {
+    animation: slideDown 150ms ease-out;
+  }
+
+  [data-state="closed"] > [data-radix-collapsible-content] {
+    animation: slideUp 150ms ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      height: 0;
+      opacity: 0;
+    }
+    to {
+      height: var(--radix-collapsible-content-height);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      height: var(--radix-collapsible-content-height);
+      opacity: 1;
+    }
+    to {
+      height: 0;
+      opacity: 0;
+    }
+  }
+
+  /* Improved chart container responsiveness */
+  .chart-container {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .chart-container > * {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Dashboard chart grid improvements */
+  @media (max-width: 768px) {
+    .dashboard-charts {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .dashboard-chart-card {
+      margin-bottom: 1rem;
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  /* Prevent chart overflow on small screens */
+  @media (max-width: 480px) {
+    .dashboard-charts .recharts-wrapper {
+      max-width: 100% !important;
+      overflow: hidden;
+    }
+  }
+}

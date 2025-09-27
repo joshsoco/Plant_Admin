@@ -68,7 +68,7 @@ const HelpPage = () => {
     },
     {
       question: "How do I add new plant species to the database?",
-      answer: "Navigate to Database Management > Add Species. You'll need botanical name, common names, characteristics, and reference images."
+      answer: "Navigate to Database Management > Add Species. You'll need plant name, common names, characteristics, and reference images."
     },
     {
       question: "Can I export identification results?",
@@ -83,7 +83,7 @@ const HelpPage = () => {
   const supportOptions = [
     {
       icon: MessageSquare,
-      title: "Botanical Support Chat",
+      title: "Plant Support Chat",
       description: "Get help from our plant identification specialists",
       availability: "Available 9AM-5PM EST",
       action: "Start Chat",
@@ -99,7 +99,7 @@ const HelpPage = () => {
     {
       icon: Phone,
       title: "Expert Consultation",
-      description: "Schedule a call with our botanical experts",
+      description: "Schedule a call with our plant experts",
       availability: "Mon-Fri, 10AM-4PM EST",
       action: "Schedule Call"
     }
@@ -119,7 +119,7 @@ const HelpPage = () => {
           </div>
           <p className="text-lg text-muted-foreground dark:text-gray-300 max-w-3xl mx-auto">
             Welcome to the Plant Identifier admin help center. Find guidance on plant identification, 
-            database management, system configuration, and botanical support resources.
+            database management, system configuration, and plant support resources.
           </p>
         </div>
 
@@ -222,7 +222,7 @@ const HelpPage = () => {
             {/* Additional Resources */}
             <Card className="border-border dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
               <CardHeader>
-                <CardTitle className="text-lg text-foreground dark:text-white">Botanical Resources</CardTitle>
+                <CardTitle className="text-lg text-foreground dark:text-white">Plant Resources</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -239,7 +239,7 @@ const HelpPage = () => {
                     <ChevronRight className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-foreground dark:text-gray-300">Botanical Classification Guide</span>
+                    <span className="text-foreground dark:text-gray-300">Plant Classification Guide</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
                   </div>
                   <div className="flex items-center justify-between">
@@ -255,9 +255,9 @@ const HelpPage = () => {
         {/* Footer */}
         <div className="text-center py-8 border-t border-border dark:border-gray-700">
           <p className="text-muted-foreground dark:text-gray-400">
-            Need help with plant identification or have questions about our botanical database? 
+            Need help with plant identification or have questions about our plant database? 
             <button className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium ml-1">
-              Contact our botanical experts
+              Contact our Plant experts
             </button>
           </p>
         </div>

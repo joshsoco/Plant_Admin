@@ -80,44 +80,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ],
       },
       {
-        title: "AI Management",
-        url: "/dashboard/ai",
-        icon: Bot,
-        items: [
-          {
-            title: "LLM Performance",
-            url: "/dashboard/ai/performance",
-          },
-          {
-            title: "Model Outputs",
-            url: "/dashboard/ai/outputs",
-          },
-          {
-            title: "Training Data",
-            url: "/dashboard/ai/training",
-          },
-        ],
-      },
-      {
-        title: "System Management",
-        url: "/dashboard/system",
-        icon: Database,
-        items: [
-          {
-            title: "Cache Status",
-            url: "/dashboard/system/cache",
-          },
-          {
-            title: "System Logs",
-            url: "/dashboard/system/logs",
-          },
-          {
-            title: "Performance",
-            url: "/dashboard/system/performance",
-          },
-        ],
-      },
-      {
         title: "Analytics - Plants",
         url: "/dashboard/analytics-plants",
         icon: BarChart3,

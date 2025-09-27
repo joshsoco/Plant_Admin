@@ -34,13 +34,13 @@ const AboutPage = () => {
     {
       icon: Brain,
       title: "AI-Powered Accuracy",
-      description: "Our advanced machine learning algorithms continuously learn from botanical data to provide increasingly accurate plant identification with each interaction.",
+      description: "Our advanced machine learning algorithms continuously learn from plant data to provide increasingly accurate plant identification with each interaction.",
       color: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
     },
     {
       icon: Database,
       title: "Comprehensive Database",
-      description: "Access to over 50,000 plant species with detailed botanical information, care instructions, and high-resolution reference images from certified botanists.",
+      description: "Access to over 50,000 plant species with detailed plant information, care instructions, and high-resolution reference images from certified botanists.",
       color: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
     },
     {
@@ -52,43 +52,43 @@ const AboutPage = () => {
     {
       icon: Shield,
       title: "Research-Grade Security",
-      description: "Enterprise-level data protection ensures your botanical research and institutional data remain secure and confidential.",
+      description: "Enterprise-level data protection ensures your plant research and institutional data remain secure and confidential.",
       color: "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
     }
   ];
 
   const teamMembers = [
     {
-      name: "Dr. Sarah Chen",
-      role: "Chief Botanist & AI Director",
-      specialty: "Machine Learning for Botanical Classification",
-      description: "Former research scientist at Royal Botanic Gardens with 15 years in plant taxonomy and AI model development.",
+      name: "Allen Rodas",
+      role: "LLM & Project Manager",
+      specialty: "Lead Machine Learning for Plant Classification",
+      description: "Former research scientist and LLM AI model development.",
       icon: TreePine,
-      credentials: "PhD in Botany, MS in Computer Science"
+      credentials: "Upang BSIT"
     },
     {
-      name: "Marcus Rivera",
+      name: "Mark Delfin",
       role: "Lead Plant Vision Engineer",
-      specialty: "Computer Vision & Image Processing",
-      description: "Specialist in developing image recognition systems for botanical applications with focus on field identification accuracy.",
+      specialty: "Web Developer & Image Processing",
+      description: "Specialist in developing image recognition systems for plant applications with focus on field identification accuracy.",
       icon: Camera,
-      credentials: "MS in Computer Vision, Plant Biology Certificate"
+      credentials: "Upang BSIT"
     },
     {
-      name: "Dr. Emily Watson",
+      name: "Royal Rex",
       role: "Database Curator & Taxonomist",
       specialty: "Plant Database Management",
-      description: "Certified taxonomist managing our comprehensive species database and ensuring scientific accuracy of all botanical data.",
+      description: "Certified taxonomist managing our comprehensive species database and ensuring scientific accuracy of all plant data.",
       icon: Database,
-      credentials: "PhD in Plant Systematics, Certified Taxonomist"
+      credentials: "Upang BSIT"
     },
     {
-      name: "James Park",
-      role: "Field Research Coordinator",
+      name: "Joshua Co",
+      role: "Front-End Developer",
       specialty: "User Experience & Field Testing",
-      description: "Coordinates field testing with botanists worldwide to optimize the identification process for real-world conditions.",
+      description: "Coordinates field testing with Plant worldwide to optimize the identification process for real-world conditions.",
       icon: Search,
-      credentials: "MS in Ecology, UX Research Certification"
+      credentials: "Upang BSIT"
     }
   ];
 
@@ -102,14 +102,14 @@ const AboutPage = () => {
   const milestones = [
     {
       year: "2019",
-      title: "Botanical Vision Born",
+      title: "Plant Vision Born",
       description: "Founded by botanists frustrated with manual plant identification. Initial AI model trained on 10,000 species.",
       achievement: "First prototype developed"
     },
     {
       year: "2021",
       title: "Research Partnership",
-      description: "Partnered with 50+ botanical gardens and universities worldwide to expand our species database and improve accuracy.",
+      description: "Partnered with 50+ plant gardens and universities worldwide to expand our species database and improve accuracy.",
       achievement: "Database expanded to 25,000 species"
     },
     {
@@ -135,7 +135,7 @@ const AboutPage = () => {
     {
       icon: Database,
       title: "Detailed Species Info",
-      description: "Access comprehensive botanical data, care guides, and distribution maps"
+      description: "Access comprehensive plant data, care guides, and distribution maps"
     },
     {
       icon: BarChart3,
@@ -178,7 +178,7 @@ const AboutPage = () => {
               <h1 className="text-5xl md:text-7xl font-bold leading-tight">
                 PlantScope AI
                 <span className="block text-green-200 dark:text-green-300 text-4xl md:text-5xl mt-2">
-                  Revolutionizing Botanical Research
+                  Revolutionizing Plant Research
                 </span>
               </h1>
             </div>
@@ -211,11 +211,11 @@ const AboutPage = () => {
             <span className="text-green-800 dark:text-green-200 font-semibold">Our Mission</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-foreground dark:text-white leading-tight">
-            Democratizing Botanical Knowledge
+            Democratizing Plant Knowledge
           </h2>
           <p className="text-xl text-muted-foreground dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
             We believe that understanding plant life should be accessible to everyone. Our AI-powered platform 
-            bridges the gap between complex botanical science and practical field identification, making plant 
+            bridges the gap between complex plant science and practical field identification, making plant 
             research and conservation efforts more efficient and accurate than ever before.
           </p>
         </div>
@@ -305,9 +305,9 @@ const AboutPage = () => {
               <Users className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
               <span className="text-yellow-800 dark:text-yellow-200 font-semibold">Our Team</span>
             </div>
-            <h2 className="text-4xl font-bold text-foreground dark:text-white">Meet Our Botanical Experts</h2>
+            <h2 className="text-4xl font-bold text-foreground dark:text-white">Meet Our plant Experts</h2>
             <p className="text-xl text-muted-foreground dark:text-gray-300 max-w-3xl mx-auto">
-              Our interdisciplinary team combines botanical expertise with cutting-edge AI technology.
+              Our interdisciplinary team combines plant expertise with cutting-edge AI technology.
             </p>
           </div>
 

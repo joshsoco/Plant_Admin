@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Area, AreaChart, Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, Bar, BarChart, Line, LineChart, XAxis, YAxis,  } from 'recharts';
 import { TrendingUp, Users, Leaf, Clock } from 'lucide-react';
 import { useMotion } from '@/contexts/MotionContext';
 
@@ -50,9 +50,9 @@ export function DashboardCharts() {
   const { shouldReduceMotion } = useMotion();
   
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+    <div className="dashboard-charts grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2">
       {/* Daily Activity Chart */}
-      <Card className="bg-card dark:bg-card border-border dark:border-gray-700">
+      <Card className="dashboard-chart-card bg-card dark:bg-card border-border dark:border-gray-700">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground dark:text-white">
             <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -74,41 +74,39 @@ export function DashboardCharts() {
                 color: "hsl(var(--secondary))",
               },
             }}
-            className="h-[200px] w-full"
+            className="h-[250px] w-full"
           >
-            <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={dailyActivityData}>
-                <defs>
-                  <linearGradient id="colorIdentifications" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-                <XAxis 
-                  dataKey="day" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: 'currentColor' }}
-                />
-                <YAxis hide />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  type="monotone"
-                  dataKey="identifications"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fill="url(#colorIdentifications)"
-                  animationDuration={shouldReduceMotion ? 0 : 800}
-                  isAnimationActive={!shouldReduceMotion}
-                />
+              <defs>
+                <linearGradient id="colorIdentifications" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+              <XAxis 
+                dataKey="day" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'currentColor' }}
+              />
+              <YAxis hide />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Area
+                type="monotone"
+                dataKey="identifications"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                fill="url(#colorIdentifications)"
+                animationDuration={shouldReduceMotion ? 0 : 800}
+                isAnimationActive={!shouldReduceMotion}
+              />
               </AreaChart>
-            </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
 
       {/* Most Identified Plants */}
-      <Card className="bg-card dark:bg-card border-border dark:border-gray-700">
+      <Card className="dashboard-chart-card bg-card dark:bg-card border-border dark:border-gray-700">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground dark:text-white">
             <Leaf className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -146,7 +144,7 @@ export function DashboardCharts() {
       </Card>
 
       {/* Weekly Trends */}
-      <Card className="bg-card dark:bg-card border-border dark:border-gray-700">
+      <Card className="dashboard-chart-card bg-card dark:bg-card border-border dark:border-gray-700">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground dark:text-white">
             <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -164,33 +162,31 @@ export function DashboardCharts() {
                 color: "hsl(var(--chart-2))",
               },
             }}
-            className="h-[200px] w-full"
+            className="h-[250px] w-full"
           >
-            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyTrendData}>
-                <XAxis 
-                  dataKey="week" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: 'currentColor' }}
-                />
-                <YAxis hide />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar
-                  dataKey="identifications"
-                  fill="hsl(var(--chart-2))"
-                  radius={[4, 4, 0, 0]}
-                  animationDuration={shouldReduceMotion ? 0 : 600}
-                  isAnimationActive={!shouldReduceMotion}
-                />
+              <XAxis 
+                dataKey="week" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'currentColor' }}
+              />
+              <YAxis hide />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar
+                dataKey="identifications"
+                fill="hsl(var(--chart-2))"
+                radius={[4, 4, 0, 0]}
+                animationDuration={shouldReduceMotion ? 0 : 600}
+                isAnimationActive={!shouldReduceMotion}
+              />
               </BarChart>
-            </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
 
       {/* Peak Usage Times */}
-      <Card className="bg-card dark:bg-card border-border dark:border-gray-700">
+      <Card className="dashboard-chart-card bg-card dark:bg-card border-border dark:border-gray-700">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground dark:text-white">
             <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -208,29 +204,27 @@ export function DashboardCharts() {
                 color: "hsl(var(--chart-3))",
               },
             }}
-            className="h-[200px] w-full"
+            className="h-[250px] w-full"
           >
-            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={peakUsageData}>
-                <XAxis 
-                  dataKey="hour" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: 'currentColor' }}
-                />
-                <YAxis hide />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Line
-                  type="monotone"
-                  dataKey="usage"
-                  stroke="hsl(var(--chart-3))"
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--chart-3))", strokeWidth: 2, r: 4 }}
-                  animationDuration={shouldReduceMotion ? 0 : 800}
-                  isAnimationActive={!shouldReduceMotion}
-                />
+              <XAxis 
+                dataKey="hour" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'currentColor' }}
+              />
+              <YAxis hide />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line
+                type="monotone"
+                dataKey="usage"
+                stroke="hsl(var(--chart-3))"
+                strokeWidth={3}
+                dot={{ fill: "hsl(var(--chart-3))", strokeWidth: 2, r: 4 }}
+                animationDuration={shouldReduceMotion ? 0 : 800}
+                isAnimationActive={!shouldReduceMotion}
+              />
               </LineChart>
-            </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
