@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 import { useLoginViewModel } from '../hooks/useLoginViewModel';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useReducedMotion } from '@/contexts/MotionContext';
@@ -48,20 +49,23 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const location = useLocation();
 
   const handleLoginSuccess = () => {
-    // Get the intended destination from location state, or default to dashboard
-    const from = location.state?.from?.pathname || '/dashboard';
-    navigate(from, { replace: true });
+    console.log('LoginForm: Login successful, navigating to dashboard');
+    // Navigate to dashboard directly
+    navigate('/dashboard', { replace: true });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('LoginForm: Form submitted');
     const result = await actions.handleLogin();
     
     if (result.success) {
+      console.log('LoginForm: Login result successful');
       onSuccess?.(result.data);
       handleLoginSuccess();
     } else if (result.error){
+      console.log('LoginForm: Login result error:', result.error);
       onError?.(result.error);
     }
   };
@@ -77,6 +81,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     hover: { scale: 1.02, transition: { duration: 0.2 } },
     tap: { scale: 0.98 }
   };
+
+  // Debug: Add console log to check loading state
+  React.useEffect(() => {
+    console.log('LoginForm: viewModel.status:', viewModel.status);
+  }, [viewModel.status]);
 
   return (
     <motion.div
@@ -103,7 +112,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           Sign in to your Admin Account to continue
         </motion.p>
       </div>
-     {viewModel.status === 'error' && (
+
+      {viewModel.status === 'error' && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -116,6 +126,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </Alert>
         </motion.div>
       )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email Field with Real-time Validation */}
         <motion.div
@@ -197,7 +208,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           )}
         </motion.div>
 
-        {/* Password Field (unchanged) */}
+        {/* Password Field */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -243,7 +254,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           )}
         </motion.div>
 
-        {/* Remember Me and Forgot Password (unchanged) */}
+        {/* Remember Me and Forgot Password */}
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, x: -20 }}
           animate={reduceMotion ? false : { opacity: 1, x: 0 }}
@@ -274,7 +285,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </button>
         </motion.div>
 
-        {/* Submit Button - Updated to consider email validation */}
+        {/* Submit Button - Updated with Bars spinner */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -290,15 +301,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             <Button
               type="submit"
               disabled={!viewModel.canSubmit || !isValidEmail}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-md transition-colors"
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-md transition-colors"
             >
               {viewModel.status === 'loading' ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <motion.div
-                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
+                <div className="flex items-center justify-center space-x-3">
                   <span>Signing in...</span>
                 </div>
               ) : (

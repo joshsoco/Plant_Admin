@@ -4,19 +4,21 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { LoginForm } from '@/features/auth/components/loginForm';
 import type { AuthResponse } from '@/features/auth/models/auth.types';
-import { Sprout  } from 'lucide-react';
+import { Sprout } from 'lucide-react';
 import { ModeToggle } from "@/components/mode-toggle";
+import { Spinner } from '@/components/ui/spinner';
 
 export const LoginPage: React.FC = () => {
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleLoginSuccess = (data: AuthResponse) => {
     console.log('Login successful:', data);
-    // No need to manually redirect - AuthenticatedRedirect component will handle this
+    setIsLoading(false);
   };
 
   const handleLoginError = (error: string) => {
     console.error('Login error:', error);
-    // You could show a toast notification here
+    setIsLoading(false);
   };
 
   const containerVariants = {
@@ -92,27 +94,23 @@ export const LoginPage: React.FC = () => {
         animate="animate"
         className="w-full max-w-md relative z-10"
       >
-      <motion.div
-        variants={cardVariants}
-        initial="initial"
-        animate="animate"
-        className="w-full max-w-md relative z-10"
-      >
         <div className="flex items-center justify-center mb-6">
           <div className="no-underline flex items-center gap-3 font-medium text-gray-900 dark:text-white text-lg">
             <div className="bg-primary text-primary-foreground flex items-center justify-center w-8 h-8 rounded-md">
-              <Sprout  className="w-5 h-5" />
+              <Sprout className="w-5 h-5" />
             </div>
             Plant-Identifier Inc.
           </div>
         </div>
-        </motion.div>
         <motion.div
           variants={cardVariants}
           className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20 dark:border-gray-700/20"
         >
           <LoginForm
-            onSuccess={handleLoginSuccess}
+            onSuccess={(data) => {
+              setIsLoading(true);
+              handleLoginSuccess(data);
+            }}
             onError={handleLoginError}
           />
         </motion.div>

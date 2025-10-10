@@ -24,7 +24,7 @@ A comprehensive plant identification system built with Django REST Framework bac
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/joshsoco/Plant_Admin.git
    cd Final_proj-Josh/backend
    ```
 

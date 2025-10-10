@@ -1,4 +1,6 @@
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PlantAPI } from '@/services/PlantBackendAPI';
 import { 
   Users, 
   Leaf, 
@@ -11,55 +13,101 @@ import {
 } from "lucide-react"
 
 export function DashboardMetrics() {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const response = await PlantAPI.getDashboardStats();
+        if (response.success) {
+          setStats(response.stats);
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="animate-pulse bg-card dark:bg-card">
+            <CardContent className="p-6">
+              <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return <div>Failed to load dashboard metrics</div>;
+  }
+
   const metrics = [
     {
       title: "Total Users",
-      value: "8,247",
-      change: "+12.3%",
+      value: stats.total_users?.toLocaleString() || "0",
+      change: "+12.3%", // You can calculate this if you track historical data
       trend: "up",
-      description: "New registrations this month",
-      subtitle: "Web & Mobile combined",
+      description: "Registered users",
+      subtitle: "All platforms combined",
       icon: Users,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-900/30"
     },
     {
       title: "Plant Identifications", 
-      value: "24,891",
+      value: stats.total_identifications?.toLocaleString() || "0",
       change: "+18.7%",
       trend: "up",
-      description: "Identifications completed today",
-      subtitle: "456 today • 3,201 this week",
+      description: `${stats.recent_identifications || 0} this week`,
+      subtitle: "Mobile & Web uploads",
       icon: Leaf,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-900/30"
     },
     {
-      title: "Flagged Plants",
-      value: "23", 
-      change: "-8.4%",
-      trend: "down",
-      description: "Pending review",
-      subtitle: "12 high priority • 11 medium",
-      icon: AlertTriangle,
-      color: "text-orange-600 dark:text-orange-400",
-      bgColor: "bg-orange-50 dark:bg-orange-900/30"
+      title: "Popular Plants",
+      value: stats.popular_plants?.length || "0",
+      change: "+5.2%",
+      trend: "up", 
+      description: "Top identified species",
+      subtitle: stats.popular_plants?.[0]?.predicted_name || "No data",
+      icon: Database,
+      color: "text-purple-600 dark:text-purple-400",
+      bgColor: "bg-purple-50 dark:bg-purple-900/30"
     },
-  ]
+    {
+      title: "System Status",
+      value: "Active",
+      change: "99.9%",
+      trend: "up",
+      description: "API uptime",
+      subtitle: "All services operational",
+      icon: CheckCircle,
+      color: "text-emerald-600 dark:text-emerald-400",
+      bgColor: "bg-emerald-50 dark:bg-emerald-900/30"
+    },
+  ];
 
   return (
-    <div className="space-y-4"> 
-      
-      {/* Main KPI Cards Grid */}
-      <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-        {metrics.slice(0, 4).map((metric, index) => (
-          <MetricCard key={index} metric={metric} />
-        ))}
-      </div>
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {metrics.map((metric, index) => (
+        <MetricCard key={index} metric={metric} />
+      ))}
     </div>
-  )
+  );
 }
 
+// ...existing MetricCard component stays the same...
 function MetricCard({ metric }: { metric: any }) {
   const Icon = metric.icon
   

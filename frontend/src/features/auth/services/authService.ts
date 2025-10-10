@@ -1,98 +1,188 @@
-import type{ ForgotPasswordRequest, VerifyOtpRequest, ApiResponse } from '../types';
+import type { LoginCredentials, AuthResponse, TokenData } from '../models/auth.types';
 
 class AuthService {
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  private baseUrl: string;
+  private tokenRefreshTimer: NodeJS.Timeout | null = null;
 
-  async forgotPassword(data: ForgotPasswordRequest): Promise<ApiResponse> {
+  constructor() {
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  }
+
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/auth/forgot-password/`, {
+      const response = await fetch(`${this.baseUrl}/api/auth/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: data.email }),
+        body: JSON.stringify(credentials),
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to send reset code');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Login failed');
       }
 
+      const data = await response.json();
+      
+      // Store token data consistently
+      const tokenData: TokenData = {
+        accessToken: data.access,
+        refreshToken: data.refresh,
+        user: data.user,
+        issuedAt: Date.now(),
+        expiresIn: 3600 // 1 hour in seconds
+      };
+
+      this.setTokenData(tokenData);
+      this.scheduleTokenRefresh(tokenData.expiresIn * 1000);
+
       return {
-        success: true,
-        message: result.message || 'Reset code sent to your email',
+        user: data.user,
+        accessToken: data.access,
+        refreshToken: data.refresh,
+        expiresIn: 3600
       };
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to send reset code',
-      };
+      console.error('Login error:', error);
+      throw error;
     }
   }
 
-  async verifyOtp(data: VerifyOtpRequest): Promise<ApiResponse> {
+  async logout(): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/auth/verify-reset-code/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: data.email, 
-          code: data.otp 
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Invalid or expired code');
+      const tokenData = this.getTokenData();
+      
+      if (tokenData?.accessToken && tokenData?.refreshToken) {
+        await fetch(`${this.baseUrl}/api/auth/logout/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${tokenData.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken: tokenData.refreshToken }),
+        });
       }
-
-      return {
-        success: true,
-        message: result.message || 'Code verified successfully',
-        data: result, // Include email and code for next step
-      };
     } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to verify code',
-      };
+      console.warn('Logout API call failed:', error);
+    } finally {
+      this.clearAllTokens();
+      if (this.tokenRefreshTimer) {
+        clearTimeout(this.tokenRefreshTimer);
+        this.tokenRefreshTimer = null;
+      }
     }
   }
 
-  async resetPassword(email: string, code: string, newPassword: string): Promise<ApiResponse> {
+  private clearAllTokens(): void {
+    // Clear all possible token storage locations
+    const storageKeys = [
+      'auth_token_data',
+      'tokenData', 
+      'userData',
+      'accessToken',
+      'refreshToken'
+    ];
+
+    storageKeys.forEach(key => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+  }
+
+  private setTokenData(tokenData: TokenData): void {
+    const dataToStore = JSON.stringify(tokenData);
+    localStorage.setItem('auth_token_data', dataToStore);
+  }
+
+  getTokenData(): TokenData | null {
     try {
-      const response = await fetch(`${this.baseUrl}/api/auth/reset-password/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email, 
-          code, 
-          password: newPassword 
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to reset password');
-      }
-
-      return {
-        success: true,
-        message: result.message || 'Password reset successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to reset password',
-      };
+      const data = localStorage.getItem('auth_token_data') || sessionStorage.getItem('auth_token_data');
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
     }
+  }
+
+  getAccessToken(): string | null {
+    const tokenData = this.getTokenData();
+    return tokenData?.accessToken || null;
+  }
+
+  isAuthenticated(): boolean {
+    const tokenData = this.getTokenData();
+    if (!tokenData || !tokenData.accessToken) {
+      return false;
+    }
+
+    // Check if token is expired
+    const now = Date.now();
+    const tokenAge = (now - tokenData.issuedAt) / 1000; // Convert to seconds
+    return tokenAge < tokenData.expiresIn;
+  }
+
+  private scheduleTokenRefresh(expiresInMs: number): void {
+    if (this.tokenRefreshTimer) {
+      clearTimeout(this.tokenRefreshTimer);
+    }
+
+    // Refresh 5 minutes before expiry
+    const refreshTime = Math.max(expiresInMs - 300000, 30000);
+    
+    this.tokenRefreshTimer = setTimeout(async () => {
+      try {
+        await this.refreshToken();
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+        this.clearAllTokens();
+      }
+    }, refreshTime);
+  }
+
+  private async refreshToken(): Promise<void> {
+    const tokenData = this.getTokenData();
+    if (!tokenData?.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/auth/refresh/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh: tokenData.refreshToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Token refresh failed');
+    }
+
+    const data = await response.json();
+    const newTokenData: TokenData = {
+      ...tokenData,
+      accessToken: data.access,
+      issuedAt: Date.now()
+    };
+
+    this.setTokenData(newTokenData);
+    this.scheduleTokenRefresh(newTokenData.expiresIn * 1000);
+  }
+
+  async forgotPassword(data: { email: string }) {
+    const response = await fetch(`${this.baseUrl}/api/auth/forgot-password/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to send reset email');
+    }
+
+    return response.json();
   }
 }
 

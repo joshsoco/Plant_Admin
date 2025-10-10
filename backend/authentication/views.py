@@ -2,13 +2,17 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth.models import User
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
-from datetime import timedelta
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.conf import settings
-from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+import secrets
+import string
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -368,5 +372,76 @@ class ResetPasswordView(APIView):
             
         except PasswordResetCode.DoesNotExist:
             return Response({'error': 'Invalid or expired code'}, status=status.HTTP_400_BAD_REQUEST)
+
+class UpdateProfileView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def put(self, request):
+        user = request.user
+        
+        first_name = request.data.get('firstName', '').strip()
+        last_name = request.data.get('lastName', '').strip()
+        email = request.data.get('email', '').strip()
+        
+        if not first_name or not last_name or not email:
+            return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if email is already taken by another user
+        if User.objects.filter(email=email).exclude(id=user.id).exists():
+            return Response({'error': 'Email is already taken'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save()
+            
+            full_name = f"{user.first_name} {user.last_name}".strip()
+            
+            return Response({
+                'message': 'Profile updated successfully',
+                'user': {
+                    'id': str(user.id),
+                    'email': user.email,
+                    'name': full_name,
+                    'firstName': user.first_name,
+                    'lastName': user.last_name,
+                    'role': 'user'
+                }
+            })
+        except Exception as e:
+            return Response({'error': 'Failed to update profile'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ChangePasswordView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def put(self, request):
+        user = request.user
+        
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        
+        if not current_password or not new_password:
+            return Response({'error': 'Current password and new password are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify current password
+        if not user.check_password(current_password):
+            return Response({'error': 'Current password is incorrect'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate new password length
+        if len(new_password) < 8:
+            return Response({'error': 'New password must be at least 8 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user.set_password(new_password)
+            user.save()
+            
+            return Response({
+                'message': 'Password changed successfully'
+            })
+        except Exception as e:
+            return Response({'error': 'Failed to change password'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # Create your views here.

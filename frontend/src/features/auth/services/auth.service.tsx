@@ -1,168 +1,64 @@
 // src/features/auth/services/auth.service.ts
 
-import type { LoginCredentials, AuthResponse } from '../models/auth.types';
-import { AuthError } from '../models/auth.types';
-
-interface TokenData {
-  accessToken: string;
-  refreshToken: string;
-  rememberMe: boolean;
-  expiresIn: number;
-  issuedAt: number;
-}
+import type { LoginCredentials, AuthResponse, TokenData } from '../models/auth.types';
 
 class AuthService {
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  private baseUrl: string;
   private tokenRefreshTimer: NodeJS.Timeout | null = null;
+
+  constructor() {
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  }
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
+      console.log('AuthService: Login attempt for:', credentials.email);
+      
       const response = await fetch(`${this.baseUrl}/api/auth/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password,
-          rememberMe: credentials.rememberMe || false,
-        }),
+        body: JSON.stringify(credentials),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new AuthError(errorData.error || 'Login failed');
-      }
-
-      const data: AuthResponse = await response.json();
-      
-      // Store tokens with metadata
-      const tokenData: TokenData = {
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        rememberMe: credentials.rememberMe || false,
-        expiresIn: data.expiresIn || 3600,
-        issuedAt: Date.now()
-      };
-
-      this.storeTokens(tokenData);
-      this.scheduleTokenRefresh(tokenData);
-
-      return data;
-    } catch (error) {
-      if (error instanceof AuthError) {
-        throw error;
-      }
-      throw new AuthError('Network error. Please try again.');
-    }
-  }
-
-  private storeTokens(tokenData: TokenData): void {
-    const tokenString = JSON.stringify(tokenData);
-    
-    if (tokenData.rememberMe) {
-      // Store in localStorage for persistence across browser sessions
-      localStorage.setItem('tokenData', tokenString);
-      sessionStorage.removeItem('tokenData');
-    } else {
-      // Store in sessionStorage (cleared when browser closes)
-      sessionStorage.setItem('tokenData', tokenString);
-      localStorage.removeItem('tokenData');
-    }
-  }
-
-  private getTokenData(): TokenData | null {
-    try {
-      const tokenString = localStorage.getItem('tokenData') || sessionStorage.getItem('tokenData');
-      if (!tokenString) return null;
-      
-      const tokenData: TokenData = JSON.parse(tokenString);
-      
-      // Check if token has expired based on stored metadata
-      const now = Date.now();
-      const tokenAge = (now - tokenData.issuedAt) / 1000; // in seconds
-      
-      if (tokenAge > tokenData.expiresIn) {
-        this.clearTokens();
-        return null;
-      }
-      
-      return tokenData;
-    } catch {
-      this.clearTokens();
-      return null;
-    }
-  }
-
-  getAccessToken(): string | null {
-    const tokenData = this.getTokenData();
-    return tokenData?.accessToken || null;
-  }
-
-  getRefreshToken(): string | null {
-    const tokenData = this.getTokenData();
-    return tokenData?.refreshToken || null;
-  }
-
-  async refreshToken(): Promise<string | null> {
-    const tokenData = this.getTokenData();
-    
-    if (!tokenData?.refreshToken) {
-      return null;
-    }
-
-    try {
-      const response = await fetch(`${this.baseUrl}/api/auth/refresh/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refreshToken: tokenData.refreshToken }),
-      });
-
-      if (!response.ok) {
-        this.clearTokens();
-        return null;
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Login failed');
       }
 
       const data = await response.json();
+      console.log('AuthService: Login response received:', data);
       
-      // Update stored token data
-      const newTokenData: TokenData = {
-        ...tokenData,
+      // Store token data consistently
+      const tokenData: TokenData = {
         accessToken: data.accessToken,
-        refreshToken: data.refreshToken || tokenData.refreshToken,
-        issuedAt: Date.now()
+        refreshToken: data.refreshToken,
+        user: data.user,
+        issuedAt: Date.now(),
+        expiresIn: data.expiresIn || 3600 // 1 hour in seconds
       };
 
-      this.storeTokens(newTokenData);
-      this.scheduleTokenRefresh(newTokenData);
+      this.setTokenData(tokenData);
+      this.scheduleTokenRefresh(tokenData.expiresIn * 1000);
+      
+      console.log('AuthService: Token data stored successfully');
 
-      return data.accessToken;
+      return {
+        user: data.user,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn || 3600
+      };
     } catch (error) {
-      this.clearTokens();
-      return null;
-    }
-  }
-
-  private scheduleTokenRefresh(tokenData: TokenData): void {
-    // Clear existing timer
-    if (this.tokenRefreshTimer) {
-      clearTimeout(this.tokenRefreshTimer);
-    }
-
-    // Schedule refresh 5 minutes before expiration
-    const refreshTime = (tokenData.expiresIn - 300) * 1000; // 5 minutes before expiry
-    
-    if (refreshTime > 0) {
-      this.tokenRefreshTimer = setTimeout(async () => {
-        await this.refreshToken();
-      }, refreshTime);
+      console.error('AuthService: Login error:', error);
+      throw error;
     }
   }
 
   async logout(): Promise<void> {
     try {
+      console.log('AuthService: Logout initiated');
       const tokenData = this.getTokenData();
       
       if (tokenData?.accessToken && tokenData?.refreshToken) {
@@ -176,33 +72,133 @@ class AuthService {
         });
       }
     } catch (error) {
-      console.warn('Logout API call failed:', error);
+      console.warn('AuthService: Logout API call failed:', error);
     } finally {
-      this.clearTokens();
+      this.clearAllTokens();
       if (this.tokenRefreshTimer) {
         clearTimeout(this.tokenRefreshTimer);
         this.tokenRefreshTimer = null;
       }
+      console.log('AuthService: Logout completed');
     }
   }
 
-  private clearTokens(): void {
-    localStorage.removeItem('tokenData');
-    sessionStorage.removeItem('tokenData');
-    localStorage.removeItem('userData');
-    sessionStorage.removeItem('userData');
+  private clearAllTokens(): void {
+    // Clear all possible token storage locations
+    const storageKeys = [
+      'auth_token_data',
+      'tokenData', 
+      'userData',
+      'accessToken',
+      'refreshToken'
+    ];
+
+    storageKeys.forEach(key => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
+    
+    console.log('AuthService: All tokens cleared');
+  }
+
+  private setTokenData(tokenData: TokenData): void {
+    const dataToStore = JSON.stringify(tokenData);
+    localStorage.setItem('auth_token_data', dataToStore);
+    console.log('AuthService: Token data set in localStorage');
+  }
+
+  getTokenData(): TokenData | null {
+    try {
+      const data = localStorage.getItem('auth_token_data') || sessionStorage.getItem('auth_token_data');
+      if (!data) {
+        console.log('AuthService: No token data found in storage');
+        return null;
+      }
+      
+      const tokenData = JSON.parse(data);
+      console.log('AuthService: Token data retrieved from storage');
+      return tokenData;
+    } catch (error) {
+      console.error('AuthService: Error parsing token data:', error);
+      this.clearAllTokens();
+      return null;
+    }
+  }
+
+  getAccessToken(): string | null {
+    const tokenData = this.getTokenData();
+    return tokenData?.accessToken || null;
   }
 
   isAuthenticated(): boolean {
-    return !!this.getAccessToken();
-  }
-
-  getRememberMeStatus(): boolean {
     const tokenData = this.getTokenData();
-    return tokenData?.rememberMe || false;
+    if (!tokenData || !tokenData.accessToken) {
+      console.log('AuthService: No valid token data for authentication check');
+      return false;
+    }
+
+    // Check if token is expired
+    const now = Date.now();
+    const tokenAge = (now - tokenData.issuedAt) / 1000; // Convert to seconds
+    const isExpired = tokenAge >= tokenData.expiresIn;
+    
+    console.log('AuthService: Token age:', tokenAge, 'seconds, expires in:', tokenData.expiresIn, 'expired:', isExpired);
+    
+    if (isExpired) {
+      this.clearAllTokens();
+      return false;
+    }
+    
+    return true;
   }
 
-  // Password Reset Methods
+  private scheduleTokenRefresh(expiresInMs: number): void {
+    if (this.tokenRefreshTimer) {
+      clearTimeout(this.tokenRefreshTimer);
+    }
+
+    // Refresh 5 minutes before expiry
+    const refreshTime = Math.max(expiresInMs - 300000, 30000);
+    
+    this.tokenRefreshTimer = setTimeout(async () => {
+      try {
+        await this.refreshToken();
+      } catch (error) {
+        console.error('AuthService: Token refresh failed:', error);
+        this.clearAllTokens();
+      }
+    }, refreshTime);
+  }
+
+  private async refreshToken(): Promise<void> {
+    const tokenData = this.getTokenData();
+    if (!tokenData?.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/auth/refresh/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh: tokenData.refreshToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Token refresh failed');
+    }
+
+    const data = await response.json();
+    const newTokenData: TokenData = {
+      ...tokenData,
+      accessToken: data.access,
+      issuedAt: Date.now()
+    };
+
+    this.setTokenData(newTokenData);
+    this.scheduleTokenRefresh(newTokenData.expiresIn * 1000);
+  }
+
   async forgotPassword(data: { email: string }): Promise<{ success: boolean; message: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/api/auth/forgot-password/`, {
@@ -227,69 +223,6 @@ class AuthService {
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to send reset code',
-      };
-    }
-  }
-
-  async verifyOtp(data: { email: string; otp: string }): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/auth/verify-reset-code/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: data.email, 
-          code: data.otp 
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Invalid or expired code');
-      }
-
-      return {
-        success: true,
-        message: result.message || 'Code verified successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to verify code',
-      };
-    }
-  }
-
-  async resetPassword(email: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/auth/reset-password/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email, 
-          code, 
-          password: newPassword 
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to reset password');
-      }
-
-      return {
-        success: true,
-        message: result.message || 'Password reset successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to reset password',
       };
     }
   }

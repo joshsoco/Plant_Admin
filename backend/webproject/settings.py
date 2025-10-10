@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'authentication',
+    'plants',
 ]
 
 MIDDLEWARE = [
@@ -130,6 +131,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Media files configuration for plant images
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -203,7 +208,7 @@ DEFAULT_FROM_EMAIL = 'joso.co.up@phinmaed.com'  # Replace with your Gmail addres
 # Password Reset Settings
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour in seconds
 OTP_EXPIRY_TIME = 600  # 10 minutes in seconds
-
+CORS_ALLOW_ALL_ORIGINS = True  # Only for development
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",

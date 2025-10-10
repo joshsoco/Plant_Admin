@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,18 +12,16 @@ import {
   Settings, 
   User, 
   Lock, 
-  Globe, 
   Info, 
   Eye, 
   EyeOff, 
   Check, 
   AlertTriangle,
   Save,
-  X,
-  Clock,
-  Calendar
+  X
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { authService } from '@/features/auth/services/authService';
 import { motion } from 'framer-motion';
 
 interface AdminSettingsDialogProps {
@@ -44,16 +41,8 @@ interface ProfileData {
   email: string;
 }
 
-interface PreferencesData {
-  locale: string;
-  timezone: string;
-  dateFormat: string;
-  numberFormat: string;
-  theme: string;
-}
-
 export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogProps) {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | null; text: string }>({ type: null, text: '' });
@@ -77,15 +66,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     email: user?.email || ''
   });
 
-  // Preferences form state
-  const [preferencesData, setPreferencesData] = useState<PreferencesData>({
-    locale: 'en-US',
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-    dateFormat: 'MM/DD/YYYY',
-    numberFormat: 'en-US',
-    theme: 'system'
-  });
-
   // Password validation
   const isPasswordValid = passwordData.newPassword.length >= 8;
   const doPasswordsMatch = passwordData.newPassword === passwordData.confirmPassword;
@@ -99,11 +79,20 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     if (!canSubmitPassword) return;
     
     setIsLoading(true);
+    setMessage({ type: null, text: '' });
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage({ type: 'success', text: 'Password updated successfully!' });
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      const result = await authService.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      if (result.success) {
+        setMessage({ type: 'success', text: result.message });
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        setMessage({ type: 'error', text: result.message });
+      }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to update password. Please try again.' });
     } finally {
@@ -116,26 +105,26 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     if (!isProfileValid) return;
     
     setIsLoading(true);
+    setMessage({ type: null, text: '' });
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      const result = await authService.updateProfile({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+      });
+
+      if (result.success) {
+        setMessage({ type: 'success', text: result.message });
+        // Update the user context with new data
+        if (result.user && updateUser) {
+          updateUser(result.user);
+        }
+      } else {
+        setMessage({ type: 'error', text: result.message });
+      }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePreferencesSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage({ type: 'success', text: 'Preferences updated successfully!' });
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update preferences. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -156,6 +145,27 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     onOpenChange(false);
   };
 
+  // Clear message after 5 seconds
+  React.useEffect(() => {
+    if (message.type) {
+      const timer = setTimeout(() => {
+        setMessage({ type: null, text: '' });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  // Update profile data when user changes
+  React.useEffect(() => {
+    if (user) {
+      setProfileData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || ''
+      });
+    }
+  }, [user]);
+
   // App version and system info
   const systemInfo = {
     version: '2.1.0',
@@ -166,28 +176,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     databaseVersion: 'SQLite 3.45.0'
   };
 
-  const timezones = [
-    'UTC',
-    'America/New_York',
-    'America/Los_Angeles',
-    'America/Chicago',
-    'Europe/London',
-    'Europe/Paris',
-    'Asia/Tokyo',
-    'Asia/Shanghai',
-    'Australia/Sydney'
-  ];
-
-  const locales = [
-    { value: 'en-US', label: 'English (US)' },
-    { value: 'en-GB', label: 'English (UK)' },
-    { value: 'es-ES', label: 'Español' },
-    { value: 'fr-FR', label: 'Français' },
-    { value: 'de-DE', label: 'Deutsch' },
-    { value: 'ja-JP', label: '日本語' },
-    { value: 'zh-CN', label: '中文 (简体)' }
-  ];
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -197,7 +185,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
             Admin Settings
           </DialogTitle>
           <DialogDescription>
-            Manage your account settings, preferences, and system configuration
+            Manage your account settings and system configuration
           </DialogDescription>
         </DialogHeader>
 
@@ -219,7 +207,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
 
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 Profile
@@ -227,10 +215,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
               <TabsTrigger value="security" className="flex items-center gap-2">
                 <Lock className="h-4 w-4" />
                 Security
-              </TabsTrigger>
-              <TabsTrigger value="preferences" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Preferences
               </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center gap-2">
                 <Info className="h-4 w-4" />
@@ -394,127 +378,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
                         >
                           <Save className="h-4 w-4" />
                           {isLoading ? 'Updating...' : 'Update Password'}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={resetForms}>
-                          <X className="h-4 w-4" />
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Preferences Tab */}
-              <TabsContent value="preferences" className="space-y-4 m-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Regional Preferences</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handlePreferencesSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="locale">Language & Region</Label>
-                          <Select value={preferencesData.locale} onValueChange={(value) => setPreferencesData(prev => ({ ...prev, locale: value }))}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select locale" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {locales.map((locale) => (
-                                <SelectItem key={locale.value} value={locale.value}>
-                                  {locale.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="timezone">Timezone</Label>
-                          <Select value={preferencesData.timezone} onValueChange={(value) => setPreferencesData(prev => ({ ...prev, timezone: value }))}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select timezone" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {timezones.map((tz) => (
-                                <SelectItem key={tz} value={tz}>
-                                  {tz}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="dateFormat">Date Format</Label>
-                          <Select value={preferencesData.dateFormat} onValueChange={(value) => setPreferencesData(prev => ({ ...prev, dateFormat: value }))}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select date format" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                              <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                              <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                              <SelectItem value="DD MMM YYYY">DD MMM YYYY</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="numberFormat">Number Format</Label>
-                          <Select value={preferencesData.numberFormat} onValueChange={(value) => setPreferencesData(prev => ({ ...prev, numberFormat: value }))}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select number format" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="en-US">1,234.56 (US)</SelectItem>
-                              <SelectItem value="en-GB">1,234.56 (UK)</SelectItem>
-                              <SelectItem value="de-DE">1.234,56 (DE)</SelectItem>
-                              <SelectItem value="fr-FR">1 234,56 (FR)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      <div className="space-y-2">
-                        <Label>Preview</Label>
-                        <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              {new Date().toLocaleDateString(preferencesData.locale, {
-                                year: 'numeric',
-                                month: preferencesData.dateFormat.includes('MMM') ? 'short' : '2-digit',
-                                day: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              {new Date().toLocaleTimeString(preferencesData.locale, {
-                                timeZone: preferencesData.timezone,
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3 pt-4">
-                        <Button 
-                          type="submit" 
-                          disabled={isLoading}
-                          className="flex items-center gap-2"
-                        >
-                          <Save className="h-4 w-4" />
-                          {isLoading ? 'Saving...' : 'Save Preferences'}
                         </Button>
                         <Button type="button" variant="outline" onClick={resetForms}>
                           <X className="h-4 w-4" />

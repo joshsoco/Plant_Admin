@@ -2,48 +2,73 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '@/features/auth/context/AuthContext';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AuthProvider, useAuth } from '@/features/auth/context/AuthContext';
+import { ThemeProvider } from '@/components/theme-provider';
+import { MotionProvider } from '@/contexts/MotionContext';
+
+// Import pages
+import { Spinner } from '@/components/ui/spinner';
 import LoginPage from '@/pages/admin/Login';
 import RegisterPage from '@/pages/admin/RegisterPage';
-import { useAuth } from '@/features/auth/context/AuthContext';
 import { ForgotPasswordPage } from '@/pages/admin/ForgotPasswordPage';
-import { VerifyOtp } from '@/features/auth/components/VerifyOtp';
-import PrivacyPolicy from './pages/admin/legal/PrivacyPolicy';
-import TermsOfService from './pages/admin/legal/TermsOfServices';
-import Dashboard from './pages/admin/dashboard/Page';
-import PlantIdentifications from "@/pages/admin/PlantIdentification";
-import PlantDatabase from "@/pages/admin/PlantDatabase";
-import AnalyticsPlant from "@/pages/admin/AnalyticsPlant";
-import { ThemeProvider } from "@/components/theme-provider";
-import { MotionProvider } from "@/contexts/MotionContext";
-import Help from "@/pages/admin/help";
-import About from "@/pages/admin/AboutUs";
+import DashboardPage from '@/pages/admin/dashboard/Page';
+import PlantDatabasePage from '@/pages/admin/PlantDatabase';
+import PlantIdentificationPage from '@/pages/admin/PlantIdentification';
+import AnalyticsPage from '@/pages/admin/AnalyticsPlant';
+import HelpPage from '@/pages/admin/help';
+import AboutPage from '@/pages/admin/AboutUs';
+import PrivacyPolicyPage from '@/pages/admin/legal/PrivacyPolicy';
+import TermsOfServicePage from '@/pages/admin/legal/TermsOfServices';
 
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
   
+  // Show loading while checking auth status
+if (isLoading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Spinner variant="bars" size={40} className="text-blue-600" />
+    </div>
+  );
+}
+  
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    console.log('ProtectedRoute: User not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Public Route Component (redirects authenticated users)
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  // Show loading while checking auth status
+ if (isLoading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Spinner variant="bars" size={40} className="text-blue-600" />
+    </div>
+  );
+}
+  
+  // Only redirect to dashboard if truly authenticated
   if (isAuthenticated) {
+    console.log('PublicRoute: User authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
 };
 
-// Dashboard Home Component (what shows when you're just on /dashboard)
-const DashboardHome = () => {
-  return (
-    <div className="flex flex-1 flex-col gap-4 p-3 sm:p-4 pt-0 space-y-6">
-      {/* Your existing dashboard content */}
-    </div>
-  );
-};
-
-// Main App component
+// Routes Component
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public routes - redirect authenticated users to dashboard */}
       <Route 
         path="/login" 
         element={
@@ -71,84 +96,43 @@ const AppRoutes: React.FC = () => {
         } 
       />
 
-      {/* Legal pages */}
-      <Route path="/terms" element={<TermsOfService />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
+      {/* Legal pages - accessible to everyone */}
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/tos" element={<TermsOfServicePage />} />
 
-      {/* OTP verification */}
-      <Route
-        path="/verify-otp"
-        element={
-          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-            <VerifyOtp
-              email="user@example.com"
-              onSuccess={() => {}}
-              onBack={() => {}}
-              onResendOtp={() => {}}
-            />
-          </div>
-        }
-      />
-
-      {/* Protected dashboard routes with nested routing */}
+      {/* Protected routes - require authentication */}
       <Route 
         path="/dashboard" 
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <DashboardPage />
           </ProtectedRoute>
-        }
+        } 
       >
-        <Route
-          path="/dashboard/database"
-          element={
-            <ProtectedRoute>
-              <PlantDatabase />
-            </ProtectedRoute>
-          }
-        />
-        {/* ...other routes... */}
-        <Route
-        path="/dashboard/identifications"
-        element={
-          <ProtectedRoute>
-            <PlantIdentifications />
-          </ProtectedRoute>
-        }
-        />
-        <Route
-        path="/dashboard/analytics-plants"
-        element={
-        <ProtectedRoute>
-          <AnalyticsPlant />
-        </ProtectedRoute>
-        }
-        />
-        <Route index element={<DashboardHome />} />
-        <Route path="/dashboard/help" element={<Help />} />
-        <Route path="/dashboard/about" element={<About />} />
+        {/* Nested routes that will render inside DashboardPage's <Outlet /> */}
+        <Route path="database" element={<PlantDatabasePage />} />
+        <Route path="identifications" element={<PlantIdentificationPage />} />
+        <Route path="analytics-plants" element={<AnalyticsPage />} />
+        <Route path="help" element={<HelpPage />} />
+        <Route path="about" element={<AboutPage />} />
       </Route>
-      
-      {/* Root redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      
-      {/* Legacy route redirects */}
-      <Route path="/db" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/ToS" element={<Navigate to="/terms" replace />} />
-      <Route path="/Privacy-policy" element={<Navigate to="/privacy" replace />} />
+
+      {/* Default redirect */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
       
       {/* Catch all route */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
 
+// Main App Component
 const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <MotionProvider>
         <AuthProvider>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <div className="min-h-screen">
             <AppRoutes />
           </div>
         </AuthProvider>

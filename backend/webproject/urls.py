@@ -17,9 +17,41 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from django.conf import settings
+from django.conf.urls.static import static
+from django.shortcuts import render
+from django.template.response import TemplateResponse
+import os
+
+def test_mobile_upload(request):
+    """Serve the mobile upload test page"""
+    file_path = os.path.join(settings.BASE_DIR, 'test_mobile_upload.html')
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        return HttpResponse(content, content_type='text/html')
+    except FileNotFoundError:
+        return HttpResponse("Test file not found", status=404)
+
+def simple_test(request):
+    """Serve the simple test page"""
+    file_path = os.path.join(settings.BASE_DIR, 'simple_test.html')
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        return HttpResponse(content, content_type='text/html')
+    except FileNotFoundError:
+        return HttpResponse("Test file not found", status=404)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('authentication.urls')),
-    path("", lambda request: HttpResponse("Hello, backend is running!")),
+    path('api/plants/', include('plants.urls')),
+    path('test_mobile_upload.html', test_mobile_upload, name='test_mobile_upload'),
+    path('simple_test.html', simple_test, name='simple_test'),
+    path("", lambda request: HttpResponse("Hello, Plant Identifier backend is running!")),
 ]
+
+# Serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

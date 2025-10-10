@@ -58,10 +58,14 @@ export const useLoginViewModel = () => {
   }, [formData]);
 
   const handleLogin = useCallback(async () => {
+    console.log('useLoginViewModel: handleLogin called');
+    
+    // Validate form first
     if (!validateForm()) {
       return { success: false, error: 'Please fix validation errors' };
     }
 
+    console.log('useLoginViewModel: Setting status to loading');
     setStatus('loading');
 
     try {
@@ -72,6 +76,7 @@ export const useLoginViewModel = () => {
       );
 
       if (success) {
+        console.log('useLoginViewModel: Login successful, setting status to success');
         setStatus('success');
         
         // Reset form
@@ -84,6 +89,7 @@ export const useLoginViewModel = () => {
           message: 'Login successful!' 
         };
       } else {
+        console.log('useLoginViewModel: Login failed, setting status to error');
         setStatus('error');
         setValidationErrors({ email: 'Invalid credentials' });
         return { 
@@ -92,6 +98,7 @@ export const useLoginViewModel = () => {
         };
       }
     } catch (error) {
+      console.log('useLoginViewModel: Login error caught, setting status to error');
       setStatus('error');
       
       const errorMessage = error instanceof Error ? error.message : 'Login failed';

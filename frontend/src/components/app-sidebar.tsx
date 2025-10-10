@@ -35,7 +35,7 @@ import {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
   const data = {
-    navMain: [
+ navMain: [
       {
         title: "Dashboard",
         url: "/dashboard",
@@ -46,18 +46,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/identifications",
         icon: Search,
         items: [
-          {
-            title: "Recent Activity",
-            url: "/dashboard/identifications/recent",
-          },
-          {
-            title: "Most Popular",
-            url: "/dashboard/identifications/popular",
-          },
-          {
-            title: "Search History",
-            url: "/dashboard/identifications/search",
-          },
+          { title: "Recent Activity", url: "/dashboard/identifications/recent" },
+          { title: "Most Popular", url: "/dashboard/identifications/popular" },
+          { title: "Search History", url: "/dashboard/identifications/search" },
         ],
       },
       {
@@ -65,18 +56,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/moderation",
         icon: ScanEye,
         items: [
-          {
-            title: "Flagged Plants",
-            url: "/dashboard/moderation/flagged",
-          },
-          {
-            title: "User Reports",
-            url: "/dashboard/moderation/reports",
-          },
-          {
-            title: "Review Queue",
-            url: "/dashboard/moderation/queue",
-          },
+          { title: "Flagged Plants", url: "/dashboard/moderation/flagged" },
+          { title: "User Reports", url: "/dashboard/moderation/reports" },
+          { title: "Review Queue", url: "/dashboard/moderation/queue" },
         ],
       },
       {
@@ -84,16 +66,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/analytics-plants",
         icon: BarChart3,
       },
-    ],
-    projects: [
       {
-        name: "Plant Database",
-        url: "/dashboard/database", 
+        title: "Plant Database",
+        url: "/dashboard/database",
         icon: BookOpen,
       },
       {
-        name: "Reports",
-        url: "/dashboard/reports", 
+        title: "Reports",
+        url: "/dashboard/reports",
         icon: Proportions,
       },
     ],
@@ -132,7 +112,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
