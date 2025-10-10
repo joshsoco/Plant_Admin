@@ -1,4 +1,4 @@
-# Plant Identifier - Full Stack Application
+# Plant Identifier - Full Stack Web Application
 
 A comprehensive plant identification system built with Django REST Framework backend and React TypeScript frontend, featuring AI-powered plant recognition, user authentication, and admin dashboard.
 
