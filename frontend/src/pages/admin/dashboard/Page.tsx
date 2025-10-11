@@ -16,8 +16,6 @@ import {
 } from "@/components/ui/sidebar"
 import { DashboardMetrics } from "@/components/dashboard/DashboardMetrics"
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts"
-import { AdminToolsQuickLinks } from '@/components/dashboard/AdminToolsQuickLinks';
-
 
 export default function Page() {
   const location = useLocation()
@@ -25,6 +23,10 @@ export default function Page() {
   const getBreadcrumbTitle = () => {
     const path = location.pathname
     if (path.includes('/reports')) return 'Reports'
+    if (path.includes('/analytics-plants')) return 'Analytics'
+    if (path.includes('/identifications')) return 'Identifications'
+    if (path.includes('/help')) return 'Help'
+    if (path.includes('/about')) return 'About'
     return 'Plant-Identifier Dashboard'
   }
 
@@ -41,7 +43,9 @@ export default function Page() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/dashboard" className="!text-gray-900 dark:!text-white">Dashboard</BreadcrumbLink>
+                  <BreadcrumbLink href="/dashboard" className="!text-gray-900 dark:!text-white">
+                    Dashboard
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
@@ -55,7 +59,6 @@ export default function Page() {
         {isRootDashboard ? (
           <div className="flex flex-1 flex-col gap-4 p-3 sm:p-4 pt-0 space-y-6">
             <DashboardMetrics />
-            <AdminToolsQuickLinks />
             <DashboardCharts />
           </div>
         ) : (

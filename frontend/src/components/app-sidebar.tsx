@@ -51,25 +51,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           { title: "Search History", url: "/dashboard/identifications/search" },
         ],
       },
-      {
-        title: "Content Moderation",
-        url: "/dashboard/moderation",
-        icon: ScanEye,
-        items: [
-          { title: "Flagged Plants", url: "/dashboard/moderation/flagged" },
-          { title: "User Reports", url: "/dashboard/moderation/reports" },
-          { title: "Review Queue", url: "/dashboard/moderation/queue" },
-        ],
-      },
+
       {
         title: "Analytics - Plants",
         url: "/dashboard/analytics-plants",
         icon: BarChart3,
-      },
-      {
-        title: "Plant Database",
-        url: "/dashboard/database",
-        icon: BookOpen,
       },
       {
         title: "Reports",

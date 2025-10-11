@@ -221,41 +221,7 @@ export function NotificationDialog({ open, onOpenChange }: NotificationsDialogPr
 
                           <Separator />
 
-                          {/* Content Moderation */}
-                          <div>
-                            <h4 className="font-medium mb-3">Content & Quality</h4>
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between p-3 border rounded-lg">
-                                <div>
-                                  <label className="font-medium text-sm">Flagged Content Alerts</label>
-                                  <p className="text-xs text-muted-foreground">Notifications when content is flagged for review</p>
-                                </div>
-                                <Button
-                                  variant={notificationSettings.flaggedContentAlerts ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => updateSetting('flaggedContentAlerts', !notificationSettings.flaggedContentAlerts)}
-                                >
-                                  {notificationSettings.flaggedContentAlerts ? "ON" : "OFF"}
-                                </Button>
-                              </div>
-
-                              <div className="flex items-center justify-between p-3 border rounded-lg">
-                                <div>
-                                  <label className="font-medium text-sm">LLM Quality Alerts</label>
-                                  <p className="text-xs text-muted-foreground">Notifications about AI model performance and quality issues</p>
-                                </div>
-                                <Button
-                                  variant={notificationSettings.llmQualityAlerts ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => updateSetting('llmQualityAlerts', !notificationSettings.llmQualityAlerts)}
-                                >
-                                  {notificationSettings.llmQualityAlerts ? "ON" : "OFF"}
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          <Separator />
+                        
 
                           {/* Analytics & Reports */}
                           <div>

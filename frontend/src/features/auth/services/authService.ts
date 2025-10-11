@@ -169,20 +169,88 @@ class AuthService {
   }
 
   async forgotPassword(data: { email: string }) {
-    const response = await fetch(`${this.baseUrl}/api/auth/forgot-password/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}/api/auth/forgot-password/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to send reset email');
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send reset email');
+      }
+
+      return {
+        success: true,
+        message: result.message || 'Reset email sent successfully'
+      };
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
     }
+  }
 
-    return response.json();
+  async verifyOtp(data: { email: string; otp: string }) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/auth/verify-reset-code/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          code: data.otp
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to verify code');
+      }
+
+      return {
+        success: true,
+        message: result.message || 'Code verified successfully'
+      };
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      throw error;
+    }
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/auth/reset-password/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          code,
+          password: newPassword
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reset password');
+      }
+
+      return {
+        success: true,
+        message: result.message || 'Password reset successfully'
+      };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
   }
 }
 

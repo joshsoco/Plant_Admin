@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { ForgotPassword } from '@/features/auth/components/ForgotPassword';
 import { VerifyOtp } from '@/features/auth/components/VerifyOtp';
 import { ResetPasswordForm } from '@/features/auth/components/ResetPasswordForm';
@@ -7,25 +8,33 @@ import { ResetPasswordForm } from '@/features/auth/components/ResetPasswordForm'
 type Step = 'forgot-password' | 'verify-otp' | 'reset-password' | 'success';
 
 export const ForgotPasswordPage: React.FC = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<Step>('forgot-password');
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
 
   const handleEmailSubmitSuccess = (userEmail: string) => {
+    console.log('Email submitted successfully:', userEmail);
     setEmail(userEmail);
     setCurrentStep('verify-otp');
   };
 
   const handleOtpSuccess = (verifiedCode: string) => {
+    console.log('OTP verified successfully:', verifiedCode);
     setVerificationCode(verifiedCode);
     setCurrentStep('reset-password');
   };
 
   const handlePasswordResetSuccess = () => {
     setCurrentStep('success');
-    // Redirect to login page after a short delay
+    // Navigate to login page after a short delay
     setTimeout(() => {
-      window.location.href = '/admin/login';
+      navigate('/login', { 
+        replace: true,
+        state: { 
+          message: 'Password reset successful! Please log in with your new password.' 
+        }
+      });
     }, 2000);
   };
 
@@ -38,13 +47,12 @@ export const ForgotPasswordPage: React.FC = () => {
   };
 
   const handleBackToLogin = () => {
-    // Navigate to login page
-    window.location.href = '/admin/login';
+    navigate('/login', { replace: true });
   };
 
   const handleResendOtp = () => {
-    // Resend OTP logic
     console.log('Resending OTP to:', email);
+    // The OTP component will handle the actual resend
   };
 
   return (

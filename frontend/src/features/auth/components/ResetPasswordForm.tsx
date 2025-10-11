@@ -86,6 +86,12 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
     e.preventDefault();
     setError(null);
 
+    // Debug: Check if all required values are present
+    if (!email || !code || !password) {
+      setError(`Missing required values: ${!email ? 'email' : ''} ${!code ? 'code' : ''} ${!password ? 'password' : ''}`);
+      return;
+    }
+
     if (!isPasswordValid) {
       setError('Please enter a stronger password');
       return;
@@ -99,6 +105,11 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
     setIsLoading(true);
 
     try {
+      console.log('Reset password data:', { 
+        email: email || 'EMPTY', 
+        code: code || 'EMPTY', 
+        password: password ? '***' : 'EMPTY' 
+      });
       const response = await authService.resetPassword(email, code, password);
       
       if (response.success) {

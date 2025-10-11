@@ -58,17 +58,6 @@ export class PlantAPI {
     return response.json();
   }
 
-  static async getPlantSpecies() {
-    const response = await fetch(`${API_BASE_URL}/api/plants/species/`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-    return response.json();
-  }
-
   static async getRandomPlants() {
     const response = await fetch(`${API_BASE_URL}/api/plants/random/`, {
       method: 'GET',
@@ -94,6 +83,40 @@ export class PlantAPI {
       credentials: 'include',
     });
     return response.json();
+  }
+
+  static async getReportsData(dateRange: string = '30', reportType: string = 'summary') {
+    const params = new URLSearchParams({
+      dateRange,
+      reportType
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/plants/admin/reports/?${params}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    return response.json();
+  }
+
+  static async exportIdentificationData(dateRange: string = '30', format: string = 'csv') {
+    const params = new URLSearchParams({
+      dateRange,
+      format
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/plants/admin/export/?${params}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    
+    if (format === 'csv') {
+      return response.blob();
+    } else {
+      return response.json();
+    }
   }
 }
 
@@ -193,6 +216,45 @@ const loadAnalyticsData = async (timeRange: string, search: string) => {
     // }
   } catch (error) {
     console.error('Error loading analytics data:', error);
+  }
+};
+*/
+
+// For Admin Dashboard (Reports):
+/*
+const loadReportsData = async (dateRange: string, reportType: string) => {
+  try {
+    const result = await PlantAPI.getReportsData(dateRange, reportType);
+    console.log('Reports data:', result);
+    // Result will show:
+    // {
+    //   success: true,
+    //   reports: [
+    //     {
+    //       id: 1,
+    //       type: "summary",
+    //       date_range: "2024-09-01 to 2024-09-30",
+    //       total_identifications: 300,
+    //       new_users: 25
+    //     }
+    //   ]
+    // }
+  } catch (error) {
+    console.error('Error loading reports data:', error);
+  }
+};
+*/
+
+// For Admin Dashboard (Export Identification Data):
+/*
+const handleExportData = async (dateRange: string, format: string) => {
+  try {
+    const result = await PlantAPI.exportIdentificationData(dateRange, format);
+    console.log('Exported data:', result);
+    // For CSV format, result will be a Blob object
+    // For JSON format, result will be a JSON object
+  } catch (error) {
+    console.error('Error exporting data:', error);
   }
 };
 */

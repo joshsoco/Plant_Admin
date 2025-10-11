@@ -12,9 +12,9 @@ import LoginPage from '@/pages/admin/Login';
 import RegisterPage from '@/pages/admin/RegisterPage';
 import { ForgotPasswordPage } from '@/pages/admin/ForgotPasswordPage';
 import DashboardPage from '@/pages/admin/dashboard/Page';
-import PlantDatabasePage from '@/pages/admin/PlantDatabase';
 import PlantIdentificationPage from '@/pages/admin/PlantIdentification';
 import AnalyticsPage from '@/pages/admin/AnalyticsPlant';
+import ReportsPage from '@/pages/admin/ReportsSimple';
 import HelpPage from '@/pages/admin/help';
 import AboutPage from '@/pages/admin/AboutUs';
 import PrivacyPolicyPage from '@/pages/admin/legal/PrivacyPolicy';
@@ -24,51 +24,45 @@ import TermsOfServicePage from '@/pages/admin/legal/TermsOfServices';
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // Show loading while checking auth status
-if (isLoading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Spinner variant="bars" size={40} className="text-blue-600" />
-    </div>
-  );
-}
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner variant="bars" size={40} className="text-blue-600" />
+      </div>
+    );
+  }
   
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    console.log('ProtectedRoute: User not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
 };
 
-// Public Route Component (redirects authenticated users)
+// Public Route Component
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // Show loading while checking auth status
- if (isLoading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Spinner variant="bars" size={40} className="text-blue-600" />
-    </div>
-  );
-}
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner variant="bars" size={40} className="text-blue-600" />
+      </div>
+    );
+  }
   
-  // Only redirect to dashboard if truly authenticated
   if (isAuthenticated) {
-    console.log('PublicRoute: User authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
 };
 
-// Routes Component
+// App Routes Component
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Public routes - redirect authenticated users to dashboard */}
+      {/* Public routes */}
       <Route 
         path="/login" 
         element={
@@ -77,7 +71,6 @@ const AppRoutes: React.FC = () => {
           </PublicRoute>
         } 
       />
-      
       <Route 
         path="/register" 
         element={
@@ -86,7 +79,6 @@ const AppRoutes: React.FC = () => {
           </PublicRoute>
         } 
       />
-      
       <Route 
         path="/forgot-password" 
         element={
@@ -95,12 +87,12 @@ const AppRoutes: React.FC = () => {
           </PublicRoute>
         } 
       />
-
-      {/* Legal pages - accessible to everyone */}
+      
+      {/* Legal pages */}
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="/tos" element={<TermsOfServicePage />} />
-
-      {/* Protected routes - require authentication */}
+      
+      {/* Protected routes */}
       <Route 
         path="/dashboard" 
         element={
@@ -109,10 +101,9 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         } 
       >
-        {/* Nested routes that will render inside DashboardPage's <Outlet /> */}
-        <Route path="database" element={<PlantDatabasePage />} />
         <Route path="identifications" element={<PlantIdentificationPage />} />
         <Route path="analytics-plants" element={<AnalyticsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
         <Route path="help" element={<HelpPage />} />
         <Route path="about" element={<AboutPage />} />
       </Route>

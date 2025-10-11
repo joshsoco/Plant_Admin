@@ -283,7 +283,7 @@ Plant-identifier Team
             return Response({
                 'message': 'Reset code sent to your email',
                 'email': email,
-                'code': reset_code.code  # TEMP: Remove this in production
+                'code': reset_code.code  # 
             }, status=status.HTTP_200_OK)
         except Exception as e:
             # For development/testing, still return success but log the error
