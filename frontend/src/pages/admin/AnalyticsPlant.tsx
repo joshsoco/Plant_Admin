@@ -104,8 +104,9 @@ const AnalyticsPlant: React.FC = () => {
         setLoading(true);
         setError(null);
         const response = await PlantAPI.getAnalyticsData(timeRange, searchFilter);
-        
-        if (response.success) {
+        if (response.timeSeries || response.topSearched) {
+          setAnalyticsData(response);
+        } else if (response.data) {
           setAnalyticsData(response.data);
         } else {
           setError('Failed to load analytics data');
@@ -117,7 +118,6 @@ const AnalyticsPlant: React.FC = () => {
         setLoading(false);
       }
     };
-
     loadAnalyticsData();
   }, [timeRange, searchFilter]);
 
@@ -261,7 +261,8 @@ const AnalyticsPlant: React.FC = () => {
                 />
               </div>
             </div>
-            <Select value={timeRange} onValueChange={(value: TimeRange) => setTimeRange(value)}>
+            {/* Only one Select component, no nesting */}
+            <Select value={timeRange} onValueChange={value => setTimeRange(value as TimeRange)}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -284,7 +285,7 @@ const AnalyticsPlant: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground dark:text-white">
-              {analyticsData.totalIdentifications.toLocaleString()}
+              {analyticsData?.totalIdentifications?.toLocaleString() ?? '—'}
             </div>
             <p className="text-xs text-muted-foreground">
               All time identifications

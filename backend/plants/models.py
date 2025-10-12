@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class PlantSpecies(models.Model):
@@ -61,3 +62,42 @@ class UserPlantCollection(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s {self.nickname or self.plant_species.common_name}"
+    
+class Plant(models.Model):
+    """Plant model for storing plant information"""
+    name = models.CharField(max_length=255)
+    scientific_name = models.CharField(max_length=255)
+    description = models.TextField()
+    thumbnail = models.URLField(max_length=500, blank=True)
+    tags = models.JSONField(default=list)  # Store tags as JSON array
+    date_added = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
+class FlaggedCase(models.Model):
+    """Cases that need manual review"""
+    REASON_CHOICES = [
+        ('low_confidence', 'Low confidence score'),
+        ('multiple_matches', 'Multiple matches'),
+        ('user_report', 'User reported issue'),
+        ('unknown', 'Unknown species'),
+    ]
+    
+    plant_name = models.CharField(max_length=255)
+    image_url = models.URLField(max_length=500)
+    reason = models.CharField(max_length=50, choices=REASON_CHOICES)
+    confidence = models.FloatField()
+    submitted_by = models.CharField(max_length=255)
+    submitted_at = models.DateTimeField(default=timezone.now)
+    is_resolved = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-submitted_at']
+    
+    def __str__(self):
+        return f"{self.plant_name} - {self.reason}"

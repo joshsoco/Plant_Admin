@@ -82,11 +82,64 @@ export class PlantAPI {
 
   static async getAnalyticsData(timeRange: string = 'month', search: string = '') {
     const params = new URLSearchParams({
-      timeRange,
+      time_range: timeRange,
       search
     });
+    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/?${params}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    return response.json();
+  }
 
-    const response = await fetch(`${API_BASE_URL}/api/plants/admin/analytics/?${params}`, {
+  static async getTopSearched(timeRange: string = 'month', search: string = '') {
+    const params = new URLSearchParams({
+      time_range: timeRange,
+      search
+    });
+    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/plants/top-searched/?${params}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    return response.json();
+  }
+
+  static async getTimeSeries(timeRange: string = 'month') {
+    const params = new URLSearchParams({
+      time_range: timeRange
+    });
+    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/identifications/time-series/?${params}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    return response.json();
+  }
+
+  static async getFlaggedCases() {
+    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/plants/flagged/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    return response.json();
+  }
+
+  static async getSummary(timeRange: string = 'month') {
+    const params = new URLSearchParams({
+      time_range: timeRange
+    });
+    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/summary/?${params}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
