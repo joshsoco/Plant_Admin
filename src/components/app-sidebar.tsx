@@ -16,6 +16,7 @@ import {
   CircleGauge, 
   Proportions,
   MessageSquare,
+  Heart,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -62,6 +63,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Reports",
         url: "/dashboard/reports",
         icon: Proportions,
+      },
+      {
+        title: "Saved Plants",
+        url: "/dashboard/saved-plants",
+        icon: Heart,
       },
     ],
     navSecondary: [

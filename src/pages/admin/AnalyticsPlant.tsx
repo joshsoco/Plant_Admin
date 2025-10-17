@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { format, subDays, subWeeks, subMonths, isAfter } from 'date-fns';
+import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import {
   Card,
   CardContent,
@@ -41,159 +41,119 @@ import {
 import {
   TrendingUp,
   Search,
-  Flag,
   Leaf,
-  Calendar,
-  Filter,
-  AlertTriangle,
   Eye,
-  CheckCircle,
-  XCircle,
+  AlertTriangle,
+  BarChart3,
+  Users,
   Clock,
+  Image as ImageIcon,
+  Calendar,
 } from 'lucide-react';
-import { PlantAPI } from '@/services/PlantBackendAPI';
-
-// TypeScript interfaces for analytics data
-interface IdentificationTimeSeriesData {
-  date: string;
-  identifications: number;
-  uniqueUsers: number;
-}
-
-interface TopSearchedPlant {
-  id: string;
-  commonName: string;
-  scientificName: string;
-  searchCount: number;
-  successRate: number;
-  averageConfidence: number;
-}
-
-interface FlaggedPlantCase {
-  id: string;
-  plantName: string;
-  scientificName: string;
-  flagCount: number;
-  lastFlagged: string;
-  flagReasons: string[];
-  status: 'pending' | 'reviewed' | 'resolved';
-}
+import { authService } from '@/features/auth/services/authService';
 
 interface AnalyticsData {
-  timeSeries: IdentificationTimeSeriesData[];
-  topSearched: TopSearchedPlant[];
-  flaggedCases: FlaggedPlantCase[];
+  success: boolean;
+  timeSeries: Array<{
+    date: string;
+    identifications: number;
+    uniqueUsers: number;
+  }>;
+  topSearched: Array<{
+    id: string;
+    commonName: string;
+    scientificName: string;
+    searchCount: number;
+    successRate: number;
+    averageConfidence: number;
+  }>;
+  flaggedCases: Array<{
+    id: string;
+    plantName: string;
+    scientificName: string;
+    flagCount: number;
+    lastFlagged: string;
+    flagReasons: string[];
+    status: string;
+  }>;
+  recentUploads?: Array<{
+    id: number;
+    common_name: string;
+    scientific_name: string;
+    confidence: number;
+    image_url: string;
+    identified_at: string;
+    user: {
+      username: string;
+      email: string;
+    } | null;
+  }>;
   totalIdentifications: number;
   totalUniqueUsers: number;
   averageSuccessRate: number;
 }
 
-type TimeRange = 'today' | 'week' | 'month' | 'custom';
-
 const AnalyticsPlant: React.FC = () => {
-  const [timeRange, setTimeRange] = useState<TimeRange>('month');
-  const [searchFilter, setSearchFilter] = useState('');
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState('month');
+  const [searchFilter, setSearchFilter] = useState('');
 
-  // Load analytics data from backend
   useEffect(() => {
-    const loadAnalyticsData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await PlantAPI.getAnalyticsData(timeRange, searchFilter);
-        // PlantAPI.handleResponse returns parsed payload.
-        // Accept either top-level shape or { data: <shape> }
-        const payload = response?.data ? response.data : response;
-        if (payload && (payload.timeSeries || payload.topSearched)) {
-          setAnalyticsData(payload as AnalyticsData);
-        } else {
-          setError('Failed to load analytics data (unexpected response)');
-          console.error('Unexpected analytics payload:', response);
-        }
-      } catch (err) {
-        console.error('Analytics loading error:', err);
-        // If the API threw an Error with payload, surface it
-        const message = (err as any)?.message || 'Failed to connect to analytics API';
-        // If server returned structured payload, prefer that
-        const serverPayload = (err as any)?.payload;
-        if (serverPayload && typeof serverPayload === 'object') {
-          setError(serverPayload.detail || serverPayload.error || JSON.stringify(serverPayload));
-        } else {
-          setError(message);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAnalyticsData();
+    loadAnalytics();
   }, [timeRange, searchFilter]);
 
-  // Helper functions
-  const getSuccessRateColor = (rate: number) => {
-    if (rate >= 90) return 'text-green-600 dark:text-green-400';
-    if (rate >= 70) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
-  };
+  const loadAnalytics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const getStatusBadge = (status: string) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-      reviewed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-      resolved: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    };
+      const token = authService.getTokenData()?.accessToken;
+      if (!token) {
+        setError('Not authenticated');
+        return;
+      }
 
-    const icons = {
-      pending: Clock,
-      reviewed: Eye,
-      resolved: CheckCircle,
-    };
+      const params = new URLSearchParams({
+        time_range: timeRange,
+        search: searchFilter,
+      });
 
-    const Icon = icons[status as keyof typeof icons];
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/plants/analytics/?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-    return (
-      <Badge className={`flex items-center gap-1 ${colors[status as keyof typeof colors]}`}>
-        <Icon className="h-3 w-3" />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
+      const data = await response.json();
+      console.log('[AnalyticsPlant] Response:', data);
 
-  const chartConfig = {
-    identifications: {
-      label: "Identifications",
-      color: "hsl(var(--chart-1))",
-    },
-    uniqueUsers: {
-      label: "Unique Users",
-      color: "hsl(var(--chart-2))",
-    },
+      if (data.success) {
+        setAnalyticsData(data);
+      } else {
+        setError('Failed to load analytics data');
+      }
+    } catch (err: any) {
+      console.error('[AnalyticsPlant] Error:', err);
+      setError(err.message || 'Failed to load analytics');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="w-full space-y-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground dark:text-white">
-              Analytics – Plants
-            </h1>
-            <p className="text-muted-foreground dark:text-gray-400">
-              Loading plant identification insights...
-            </p>
+      <div className="w-full p-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p>Loading analytics...</p>
           </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
         </div>
       </div>
     );
@@ -201,374 +161,306 @@ const AnalyticsPlant: React.FC = () => {
 
   if (error || !analyticsData) {
     return (
-      <div className="w-full space-y-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground dark:text-white">
-              Analytics – Plants
-            </h1>
-            <p className="text-muted-foreground dark:text-gray-400">
-              Plant identification insights and performance metrics
-            </p>
-          </div>
+      <div className="w-full p-6 space-y-6">
+        <div className="text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 dark:text-red-400">
+            Failed to load analytics: {error}
+          </p>
+          <button
+            onClick={() => loadAnalytics()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
         </div>
-        
-        <Card>
-          <CardContent className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Failed to Load Analytics</h3>
-            <p className="text-muted-foreground">{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Retry
-            </button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
-  const topSearchedChartData = analyticsData.topSearched.slice(0, 8).map(plant => ({
-    name: plant.commonName.length > 15 ? plant.commonName.substring(0, 15) + '...' : plant.commonName,
-    count: plant.searchCount,
-    successRate: plant.successRate,
-  }));
-
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+      <div className="flex flex-col space-y-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground dark:text-white">
-            Analytics – Plants
+          <h1 className="text-2xl font-bold text-foreground dark:text-white flex items-center gap-2">
+            <BarChart3 className="h-6 w-6" />
+            Real-Time Analytics
           </h1>
           <p className="text-muted-foreground dark:text-gray-400">
-            Plant identification insights and performance metrics
+            Live monitoring of plant identification performance and trends
           </p>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters & Time Range
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search plants..."
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            {/* Only one Select component, no nesting */}
-            <Select value={timeRange} onChange={e => setTimeRange((e.target as HTMLSelectElement).value as TimeRange)}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Summary Stats */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Identifications</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-500" />
+              Active Identifications
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground dark:text-white">
-              {analyticsData?.totalIdentifications?.toLocaleString() ?? '—'}
+            <div className="text-3xl font-bold text-blue-600">
+              {analyticsData.totalIdentifications.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              All time identifications
+            <p className="text-xs text-muted-foreground mt-1">
+              In selected time range
             </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unique Users</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="h-4 w-4 text-green-500" />
+              Active Users
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground dark:text-white">
+            <div className="text-3xl font-bold text-green-600">
               {analyticsData.totalUniqueUsers.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Users who uploaded photos
+            <p className="text-xs text-muted-foreground mt-1">
+              Unique users contributing
             </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-            <Leaf className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Leaf className="h-4 w-4 text-purple-500" />
+              Accuracy Rate
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getSuccessRateColor(analyticsData.averageSuccessRate)}`}>
-              {analyticsData.averageSuccessRate}%
+            <div className="text-3xl font-bold text-purple-600">
+              {analyticsData.averageSuccessRate.toFixed(1)}%
             </div>
-            <p className="text-xs text-muted-foreground">
-              Correct identifications
+            <p className="text-xs text-muted-foreground mt-1">
+              Successful identifications
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Identifications Over Time */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              Plant Identifications Over Time
-            </CardTitle>
-            <CardDescription>
-              Daily identification volume and unique users ({timeRange} view)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <AreaChart data={analyticsData.timeSeries}>
-                <defs>
-                  <linearGradient id="fillIdentifications" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-identifications)"
-                      stopOpacity={0.3}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-identifications)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                  <linearGradient id="fillUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-uniqueUsers)"
-                      stopOpacity={0.3}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-uniqueUsers)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => format(new Date(value), 'MMM dd')}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  labelFormatter={(value) => format(new Date(value), 'MMM dd, yyyy')}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="identifications"
-                  stroke="var(--color-identifications)"
-                  fill="url(#fillIdentifications)"
-                  strokeWidth={2}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="uniqueUsers"
-                  stroke="var(--color-uniqueUsers)"
-                  fill="url(#fillUsers)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        {/* Top Searched Plants Bar Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-green-600 dark:text-green-400" />
-              Top Searched Plants
-            </CardTitle>
-            <CardDescription>
-              Most popular plants by identification volume
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer 
-              config={{
-                count: {
-                  label: "Search Count",
-                  color: "hsl(var(--chart-1))",
-                },
-              }}
-              className="h-[300px] w-full"
-            >
-              <BarChart data={topSearchedChartData} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis 
-                  type="category" 
-                  dataKey="name" 
-                  tick={{ fontSize: 10 }}
-                  width={80}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar 
-                  dataKey="count" 
-                  fill="var(--color-count)"
-                  radius={[0, 4, 4, 0]}
-                />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        {/* Top Searched Plants Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Leaf className="h-5 w-5 text-green-600 dark:text-green-400" />
-              Plant Search Details
-            </CardTitle>
-            <CardDescription>
-              Success rates and confidence scores
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Plant</TableHead>
-                    <TableHead className="text-right">Searches</TableHead>
-                    <TableHead className="text-right">Success Rate</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {analyticsData.topSearched.slice(0, 6).map((plant) => (
-                    <TableRow key={plant.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium text-sm">{plant.commonName}</div>
-                          <div className="text-xs text-muted-foreground italic">
-                            {plant.scientificName}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {plant.searchCount.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className={`font-medium text-sm ${getSuccessRateColor(plant.successRate)}`}>
-                          {plant.successRate}%
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Flagged Cases */}
+      {/* Time Series Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Flag className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            Most Flagged Plant Cases
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            Activity Trend Over Time
           </CardTitle>
           <CardDescription>
-            Plants with identification issues requiring review ({analyticsData.flaggedCases.length} cases)
+            Real-time tracking of identifications and user engagement
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {analyticsData.flaggedCases.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
-              <p className="text-gray-500">No flagged cases found</p>
-              <p className="text-sm text-gray-400">All plant identifications are performing well!</p>
+          <ChartContainer
+            config={{
+              identifications: {
+                label: 'Identifications',
+                color: 'hsl(var(--chart-1))',
+              },
+              uniqueUsers: {
+                label: 'Unique Users',
+                color: 'hsl(var(--chart-2))',
+              },
+            }}
+            className="h-[350px] w-full"
+          >
+            <AreaChart data={analyticsData.timeSeries}>
+              <defs>
+                <linearGradient id="colorId" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(value) => format(new Date(value), 'MM/dd')}
+                className="text-xs"
+              />
+              <YAxis className="text-xs" />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Area
+                type="monotone"
+                dataKey="identifications"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorId)"
+              />
+              <Area
+                type="monotone"
+                dataKey="uniqueUsers"
+                stroke="#10b981"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorUsers)"
+              />
+            </AreaChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      {/* Top Plants */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-blue-600" />
+            Recent Plant Uploads
+          </CardTitle>
+          <CardDescription>Latest plant identifications with details</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {analyticsData.recentUploads && analyticsData.recentUploads.length > 0 ? (
+            <div className="space-y-4">
+              {analyticsData.recentUploads.map((upload) => (
+                <div
+                  key={upload.id}
+                  className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  {/* Plant Image */}
+                  <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    {upload.image_url ? (
+                      <img
+                        src={upload.image_url}
+                        alt={upload.common_name}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23e5e7eb" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-family="sans-serif" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full w-full">
+                        <ImageIcon className="h-8 w-8 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Plant Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-foreground truncate">
+                          {upload.common_name || 'Unknown Plant'}
+                        </h4>
+                        <p className="text-sm text-muted-foreground italic truncate">
+                          {upload.scientific_name || 'Not identified'}
+                        </p>
+                        {upload.user && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Uploaded by: <span className="font-medium">{upload.user.username}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Confidence Badge */}
+                      <div className="flex-shrink-0">
+                        <Badge
+                          variant={
+                            upload.confidence >= 80 ? 'default' :
+                            upload.confidence >= 50 ? 'secondary' : 'destructive'
+                          }
+                          className={
+                            upload.confidence >= 80 ? 'bg-green-500' :
+                            upload.confidence >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                          }
+                        >
+                          {upload.confidence.toFixed(1)}% confidence
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Timestamp */}
+                    <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>{format(new Date(upload.identified_at), 'MMM dd, yyyy • HH:mm')}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Plant</TableHead>
-                    <TableHead>Flag Count</TableHead>
-                    <TableHead>Reasons</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Flagged</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {analyticsData.flaggedCases.map((case_) => (
-                    <TableRow key={case_.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium text-sm">{case_.plantName}</div>
-                          <div className="text-xs text-muted-foreground italic">
-                            {case_.scientificName}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4 text-orange-500" />
-                          <span className="font-medium">{case_.flagCount}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {case_.flagReasons.slice(0, 2).map((reason, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {reason}
-                            </Badge>
-                          ))}
-                          {case_.flagReasons.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{case_.flagReasons.length - 2} more
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(case_.status)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(case_.lastFlagged), 'MMM dd, HH:mm')}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="text-center py-8 text-muted-foreground">
+              <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No recent uploads in the selected time range</p>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Flagged Cases */}
+      {analyticsData.flaggedCases.length > 0 && (
+        <Card className="border-l-4 border-l-orange-500">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              Issues Requiring Attention
+            </CardTitle>
+            <CardDescription>
+              Low-confidence identifications ({analyticsData.flaggedCases.length} pending review)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Plant</TableHead>
+                  <TableHead>Issue</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Detected</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {analyticsData.flaggedCases.slice(0, 5).map((case_) => (
+                  <TableRow key={case_.id} className="hover:bg-orange-50 dark:hover:bg-orange-900/10">
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{case_.plantName}</div>
+                        <div className="text-xs text-muted-foreground italic">
+                          {case_.scientificName}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {case_.flagReasons.map((reason, i) => (
+                        <Badge key={i} variant="outline" className="mr-1 border-orange-300 text-orange-700">
+                          {reason}
+                        </Badge>
+                      ))}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="destructive" className="bg-orange-500">
+                        {case_.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {format(new Date(case_.lastFlagged), 'MMM dd, HH:mm')}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {analyticsData.flaggedCases.length > 5 && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  +{analyticsData.flaggedCases.length - 5} more cases to review
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

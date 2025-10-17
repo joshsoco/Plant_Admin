@@ -14,26 +14,57 @@ import { authService } from '@/features/auth/services/authService';
 export function DashboardMetrics() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const token = authService.getTokenData()?.accessToken;
-        if (!token) throw new Error("No access token found");
-
-        const response = await PlantAPI.getDashboardStats(token); // Pass token
-        if (response.success) {
+        setLoading(true);
+        setError(null);
+        
+        const tokenData = authService.getTokenData();
+        if (!tokenData?.accessToken) {
+          console.error("[DashboardMetrics] No access token found");
+          setError("Not authenticated. Please log in again.");
+          // Optionally redirect to login
+          // window.location.href = '/login';
+          return;
+        }
+        
+        console.log("[DashboardMetrics] Fetching with token:", tokenData.accessToken.substring(0, 20) + "...");
+        
+        const response = await PlantAPI.getDashboardStats(tokenData.accessToken);
+        console.log("[DashboardMetrics] Response:", response);
+        
+        if (response.success && response.stats) {
           setStats(response.stats);
         } else {
-          console.error("Failed to load stats:", response);
+          const errorMsg = response.error || "Failed to load data";
+          console.error("[DashboardMetrics] API returned error:", errorMsg);
+          
+          // If user not found, clear auth and redirect
+          if (response.code === 'user_not_found' || response.code === 'authentication_required') {
+            authService.logout();
+            window.location.href = '/login';
+          }
+          
+          setError(errorMsg);
         }
-      } catch (error) {
-        console.error('Failed to load dashboard stats:', error);
+      } catch (error: any) {
+        console.error('[DashboardMetrics] Request failed:', error);
+        
+        // Check if it's an authentication error
+        if (error.message?.includes('401')) {
+          authService.logout();
+          window.location.href = '/login';
+        }
+        
+        setError(error.message || "Network error");
       } finally {
         setLoading(false);
       }
     };
-
+    
     loadStats();
   }, []);
 
@@ -51,15 +82,25 @@ export function DashboardMetrics() {
     );
   }
 
-  if (!stats) {
-    return <div>Failed to load dashboard metrics</div>;
+  if (error || !stats) {
+    return (
+      <div className="text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg">
+        <p className="text-red-600 dark:text-red-400">Failed to load dashboard metrics: {error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   const metrics = [
     {
       title: "Total Users",
       value: stats.total_users?.toLocaleString() || "0",
-      change: "+12.3%", // Example, replace with real calculation
+      change: "+12.3%",
       trend: "up",
       description: "Registered users",
       subtitle: "All platforms combined",
@@ -79,23 +120,23 @@ export function DashboardMetrics() {
       bgColor: "bg-green-50 dark:bg-green-900/30"
     },
     {
-      title: "Popular Plants",
-      value: stats.popular_plants?.length || "0",
+      title: "Saved Plants",
+      value: stats.total_saved_plants?.toLocaleString() || "0",
       change: "+5.2%",
       trend: "up",
-      description: "Top identified species",
-      subtitle: stats.popular_plants?.[0]?.predicted_name || "No data",
+      description: "User collections",
+      subtitle: "Personal plant libraries",
       icon: Database,
       color: "text-purple-600 dark:text-purple-400",
       bgColor: "bg-purple-50 dark:bg-purple-900/30"
     },
     {
-      title: "System Status",
-      value: "Active",
-      change: "99.9%",
+      title: "Popular Species",
+      value: stats.popular_plants?.length?.toString() || "0",
+      change: "+8.1%",
       trend: "up",
-      description: "API uptime",
-      subtitle: "All services operational",
+      description: "Most identified",
+      subtitle: stats.popular_plants?.[0]?.predicted_name || "No data",
       icon: CheckCircle,
       color: "text-emerald-600 dark:text-emerald-400",
       bgColor: "bg-emerald-50 dark:bg-emerald-900/30"
@@ -113,11 +154,12 @@ export function DashboardMetrics() {
 
 function MetricCard({ metric }: { metric: any }) {
   const Icon = metric.icon;
-
+  const TrendIcon = metric.trend === "up" ? TrendingUp : TrendingDown;
+  
   return (
-    <Card className="relative overflow-hidden hover:shadow-md transition-shadow bg-card dark:bg-card border border-border dark:border-gray-700">
+    <Card className="bg-card dark:bg-card border-border dark:border-gray-700 hover:shadow-lg transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground dark:text-gray-300">
+        <CardTitle className="text-sm font-medium text-foreground dark:text-white">
           {metric.title}
         </CardTitle>
         <div className={`p-2 rounded-lg ${metric.bgColor}`}>
@@ -125,31 +167,23 @@ function MetricCard({ metric }: { metric: any }) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center space-x-2 mb-2">
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground dark:text-white">
+        <div className="flex items-baseline justify-between">
+          <div className="text-2xl font-bold text-foreground dark:text-white">
             {metric.value}
           </div>
-          <div className={`flex items-center text-xs sm:text-sm px-2 py-1 rounded-full ${
-            metric.trend === "up" 
-              ? "text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30" 
-              : "text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30"
+          <div className={`flex items-center text-xs font-medium ${
+            metric.trend === "up" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
           }`}>
-            {metric.trend === "up" ? (
-              <TrendingUp className="h-3 w-3 mr-1" />
-            ) : (
-              <TrendingDown className="h-3 w-3 mr-1" />
-            )}
+            <TrendIcon className="h-3 w-3 mr-1" />
             {metric.change}
           </div>
         </div>
-        <div className="space-y-1">
-          <p className="text-xs sm:text-sm font-medium text-foreground dark:text-gray-200">
-            {metric.description}
-          </p>
-          <p className="text-xs text-muted-foreground dark:text-gray-400">
-            {metric.subtitle}
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground dark:text-gray-400 mt-1">
+          {metric.description}
+        </p>
+        <p className="text-xs text-muted-foreground dark:text-gray-500 mt-0.5 italic">
+          {metric.subtitle}
+        </p>
       </CardContent>
     </Card>
   );

@@ -2,33 +2,34 @@
 // Add this to your frontend services
 import { authService } from '@/features/auth/services/authService';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'; // Your Django backend URL
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
-function buildHeaders(json = true, token?: string) {
-  const access = token ?? authService?.getAccessToken?.();
-  const headers: Record<string, string> = {};
-  if (json) headers['Content-Type'] = 'application/json';
-  if (access) headers['Authorization'] = `Bearer ${access}`;
+function buildHeaders(includeAuth = false, token?: string): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (includeAuth && token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
   return headers;
 }
 
 async function handleResponse(response: Response) {
-  const text = await response.text();
-  let payload: any = null;
-  try {
-    payload = text ? JSON.parse(text) : null;
-  } catch (e) {
-    // not JSON
-    payload = text;
-  }
+  const contentType = response.headers.get('content-type');
+  
   if (!response.ok) {
-    const message = (payload && payload.detail) || (typeof payload === 'string' ? payload : JSON.stringify(payload)) || response.statusText;
-    const err = new Error(`${response.status}: ${message}`);
-    // attach original payload for callers who want structured error info
-    (err as any).payload = payload;
-    throw err;
+    const errorText = await response.text();
+    console.error('API Error:', response.status, errorText);
+    throw new Error(`API Error: ${response.status} - ${errorText}`);
   }
-  return payload;
+  
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+  
+  return response.text();
 }
 
 export class PlantAPI {
@@ -36,7 +37,7 @@ export class PlantAPI {
   static async login(credentials: { username: string; password: string }) {
     const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
       method: 'POST',
-      headers: buildHeaders(true),
+      headers: buildHeaders(false),
       credentials: 'include',
       body: JSON.stringify(credentials),
     });
@@ -60,7 +61,8 @@ export class PlantAPI {
   }
 
   // Admin dashboard endpoints
-  static async getPlantIdentifications(token?: string) {
+  static async getPlantIdentifications(token: string) {
+    console.log('[PlantAPI] Fetching plant identifications with token:', token.substring(0, 20) + '...');
     const response = await fetch(`${API_BASE_URL}/api/plants/admin/identifications/`, {
       method: 'GET',
       headers: buildHeaders(true, token),
@@ -69,7 +71,8 @@ export class PlantAPI {
     return handleResponse(response);
   }
 
-  static async getDashboardStats(token?: string) {
+  static async getDashboardStats(token: string) {
+    console.log('[PlantAPI] Fetching dashboard stats with token:', token.substring(0, 20) + '...');
     const response = await fetch(`${API_BASE_URL}/api/plants/admin/stats/`, {
       method: 'GET',
       headers: buildHeaders(true, token),
@@ -97,9 +100,9 @@ export class PlantAPI {
   }
 
   // Analytics endpoints
-  static async getAnalyticsData(timeRange: string = 'month', search: string = '', token?: string) {
+  static async getAnalyticsData(timeRange: string = 'month', search: string = '', token: string) {
     const params = new URLSearchParams({ time_range: timeRange, search });
-    const response = await fetch(`${API_BASE_URL}/analytics/?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/?${params.toString()}`, {
       method: 'GET',
       headers: buildHeaders(true, token),
       credentials: 'include',
@@ -149,6 +152,38 @@ export class PlantAPI {
   // New: Fetch identification history for a specific plant identification
   static async getPlantHistory(identificationId: number, token?: string) {
     const response = await fetch(`${API_BASE_URL}/admin/identifications/${identificationId}/history/`, {
+      method: 'GET',
+      headers: buildHeaders(true, token),
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  }
+
+  // Reports endpoint
+  static async getReport(period: string = '30', reportType: string = 'summary', token?: string) {
+    const params = new URLSearchParams({ period, type: reportType });
+    const response = await fetch(`${API_BASE_URL}/api/plants/reports/?${params.toString()}`, {
+      method: 'GET',
+      headers: buildHeaders(true, token),
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  }
+
+  static async downloadReportCSV(period: string = '30', reportType: string = 'summary', token?: string) {
+    const params = new URLSearchParams({ period, type: reportType, format: 'csv' });
+    const response = await fetch(`${API_BASE_URL}/api/plants/reports/?${params.toString()}`, {
+      method: 'GET',
+      headers: buildHeaders(true, token),
+      credentials: 'include',
+    });
+    return response.blob();
+  }
+
+  // Admin Saved Plants endpoint
+  static async getAdminSavedPlants(search: string = '', userFilter: string = '', token: string) {
+    const params = new URLSearchParams({ search, user: userFilter });
+    const response = await fetch(`${API_BASE_URL}/api/plants/admin/saved-plants/?${params.toString()}`, {
       method: 'GET',
       headers: buildHeaders(true, token),
       credentials: 'include',

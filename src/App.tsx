@@ -19,6 +19,8 @@ import HelpPage from '@/pages/admin/help';
 import AboutPage from '@/pages/admin/AboutUs';
 import PrivacyPolicyPage from '@/pages/admin/legal/PrivacyPolicy';
 import TermsOfServicePage from '@/pages/admin/legal/TermsOfServices';
+import ReportsPage from '@/pages/admin/Reports';
+import SavedPlants from '@/pages/admin/SavedPlants';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -115,6 +117,8 @@ const AppRoutes: React.FC = () => {
         <Route path="analytics-plants" element={<AnalyticsPage />} />
         <Route path="help" element={<HelpPage />} />
         <Route path="about" element={<AboutPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="saved-plants" element={<SavedPlants />} />
       </Route>
 
       {/* Default redirect */}

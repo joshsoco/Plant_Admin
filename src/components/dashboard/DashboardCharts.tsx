@@ -269,36 +269,7 @@ export function DashboardCharts() {
         </CardContent>
       </Card>
 
-      {/* Most Identified Plants */}
-      
-
-      
-
-      {/* Peak Usage */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-blue-500" /> Peak Usage Times
-          </CardTitle>
-          <CardDescription>Hourly usage patterns throughout the day</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={{ usage: { label: 'Usage', color: '#f59e0b' } }} className="h-[250px] w-full">
-            <AreaChart data={peakUsageData}>
-              <defs>
-                <linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="hourLabel" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'currentColor' }} />
-              <YAxis hide />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Area type="monotone" dataKey="usage" stroke="#f59e0b" strokeWidth={2} fill="url(#colorUsage)" />
-            </AreaChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+ 
     </div>
   );
 }

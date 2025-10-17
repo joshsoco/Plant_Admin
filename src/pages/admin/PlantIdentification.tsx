@@ -75,34 +75,40 @@ const PlantIdentifications: React.FC = () => {
   useEffect(() => {
     const loadIdentifications = async () => {
       if (!user) return;
+      
       setLoading(true);
       setError(null);
 
       try {
         const token = authService.getTokenData()?.accessToken;
         if (!token) {
-          setError('No token found');
+          setError('No authentication token found');
           return;
         }
 
+        console.log('[PlantIdentifications] Fetching with token:', token.substring(0, 20) + '...');
         const response = await PlantAPI.getPlantIdentifications(token);
-        console.log('API Response:', response);
+        console.log('[PlantIdentifications] API Response:', response);
 
         if (response?.success && Array.isArray(response.identifications)) {
           setIdentifications(response.identifications);
+          console.log('[PlantIdentifications] Loaded', response.identifications.length, 'identifications');
         } else {
-          setError('Invalid response format');
+          setError('Invalid response format from server');
           setIdentifications([]);
         }
       } catch (err: any) {
-        setError(err.message || 'Error fetching data');
+        console.error('[PlantIdentifications] Error:', err);
+        setError(err.message || 'Failed to load identifications');
         setIdentifications([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (!isLoading) loadIdentifications();
+    if (!isLoading) {
+      loadIdentifications();
+    }
   }, [user, isLoading]);
 
   const filteredIdentifications = useMemo(() => {
