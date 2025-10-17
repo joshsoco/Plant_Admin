@@ -307,6 +307,35 @@ def get_analytics_data(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_plant_species(request):
+    """
+    Get all plant species for admin management
+    """
+    try:
+        species = PlantSpecies.objects.all().order_by('common_name')
+        
+        data = []
+        for plant in species:
+            data.append({
+                'id': plant.id,
+                'common_name': plant.common_name,
+                'scientific_name': plant.scientific_name,
+                'description': plant.description,
+                'care_instructions': plant.care_instructions,
+                'image_url': plant.image.url if plant.image else None,
+                'created_at': plant.created_at.isoformat()
+            })
+        
+        return Response({
+            'success': True,
+            'species': data,
+            'total_count': len(data)
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -357,246 +386,3 @@ def random_plants(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-# Add these new views after your existing views
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def get_identification_reports(request):
-    """
-    Generate identification reports from mobile app data
-    """
-    try:
-        from django.db.models import Count, Avg, Q
-        from datetime import datetime, timedelta
-        from django.utils import timezone
-        
-        # Get query parameters
-        date_range = request.GET.get('dateRange', '30')  # days
-        report_type = request.GET.get('reportType', 'summary')
-        
-        # Calculate date range
-        end_date = timezone.now()
-        start_date = end_date - timedelta(days=int(date_range))
-        
-        # Base queryset
-        identifications = PlantIdentification.objects.filter(
-            created_at__gte=start_date,
-            created_at__lte=end_date
-        )
-        
-        if report_type == 'summary':
-            # Summary report
-            total_identifications = identifications.count()
-            unique_users = identifications.values('user').distinct().count()
-            unique_species = identifications.values('predicted_name').distinct().count()
-            
-            # Confidence distribution
-            high_confidence = identifications.filter(confidence_score__gte=0.8).count()
-            medium_confidence = identifications.filter(
-                confidence_score__gte=0.5, 
-                confidence_score__lt=0.8
-            ).count()
-            low_confidence = identifications.filter(confidence_score__lt=0.5).count()
-            
-            # Success rate (if you have user feedback)
-            correct_ids = identifications.filter(is_correct=True).count()
-            total_with_feedback = identifications.exclude(is_correct=None).count()
-            success_rate = (correct_ids / total_with_feedback * 100) if total_with_feedback > 0 else 0
-            
-            # Daily activity
-            daily_stats = []
-            current_date = start_date.date()
-            while current_date <= end_date.date():
-                day_start = timezone.make_aware(datetime.combine(current_date, datetime.min.time()))
-                day_end = day_start + timedelta(days=1)
-                
-                daily_count = identifications.filter(
-                    created_at__gte=day_start,
-                    created_at__lt=day_end
-                ).count()
-                
-                daily_stats.append({
-                    'date': current_date.isoformat(),
-                    'identifications': daily_count
-                })
-                current_date += timedelta(days=1)
-            
-            return Response({
-                'success': True,
-                'report': {
-                    'type': 'summary',
-                    'dateRange': f"{start_date.date()} to {end_date.date()}",
-                    'summary': {
-                        'totalIdentifications': total_identifications,
-                        'uniqueUsers': unique_users,
-                        'uniqueSpecies': unique_species,
-                        'successRate': round(success_rate, 2),
-                        'confidenceDistribution': {
-                            'high': high_confidence,
-                            'medium': medium_confidence,
-                            'low': low_confidence
-                        }
-                    },
-                    'dailyActivity': daily_stats
-                }
-            })
-            
-        elif report_type == 'species':
-            # Species-specific report
-            species_stats = identifications.values('predicted_name').annotate(
-                identification_count=Count('id'),
-                avg_confidence=Avg('confidence_score'),
-                unique_users=Count('user', distinct=True)
-            ).order_by('-identification_count')[:20]
-            
-            species_data = []
-            for species in species_stats:
-                # Get recent identifications for this species
-                recent_ids = identifications.filter(
-                    predicted_name=species['predicted_name']
-                ).order_by('-created_at')[:5]
-                
-                recent_activity = [{
-                    'user': id.user.username,
-                    'date': id.created_at.isoformat(),
-                    'confidence': round(id.confidence_score * 100, 1),
-                    'location': id.location
-                } for id in recent_ids]
-                
-                species_data.append({
-                    'species': species['predicted_name'],
-                    'identificationCount': species['identification_count'],
-                    'averageConfidence': round((species['avg_confidence'] or 0) * 100, 1),
-                    'uniqueUsers': species['unique_users'],
-                    'recentActivity': recent_activity
-                })
-            
-            return Response({
-                'success': True,
-                'report': {
-                    'type': 'species',
-                    'dateRange': f"{start_date.date()} to {end_date.date()}",
-                    'speciesData': species_data
-                }
-            })
-            
-        elif report_type == 'users':
-            # User activity report
-            user_stats = identifications.values('user__username', 'user__email').annotate(
-                identification_count=Count('id'),
-                avg_confidence=Avg('confidence_score'),
-                species_diversity=Count('predicted_name', distinct=True),
-                last_activity=timezone.now()  # Will be overridden below
-            ).order_by('-identification_count')[:50]
-            
-            user_data = []
-            for user_stat in user_stats:
-                # Get last activity
-                last_identification = identifications.filter(
-                    user__username=user_stat['user__username']
-                ).order_by('-created_at').first()
-                
-                user_data.append({
-                    'username': user_stat['user__username'],
-                    'email': user_stat['user__email'],
-                    'identificationCount': user_stat['identification_count'],
-                    'averageConfidence': round((user_stat['avg_confidence'] or 0) * 100, 1),
-                    'speciesDiversity': user_stat['species_diversity'],
-                    'lastActivity': last_identification.created_at.isoformat() if last_identification else None
-                })
-            
-            return Response({
-                'success': True,
-                'report': {
-                    'type': 'users',
-                    'dateRange': f"{start_date.date()} to {end_date.date()}",
-                    'userData': user_data
-                }
-            })
-        
-        else:
-            return Response({'error': 'Invalid report type'}, status=400)
-            
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def export_identification_data(request):
-    """
-    Export identification data in CSV format
-    """
-    try:
-        import csv
-        from django.http import HttpResponse
-        from datetime import datetime, timedelta
-        from django.utils import timezone
-        
-        # Get query parameters
-        date_range = request.GET.get('dateRange', '30')
-        format_type = request.GET.get('format', 'csv')
-        
-        # Calculate date range
-        end_date = timezone.now()
-        start_date = end_date - timedelta(days=int(date_range))
-        
-        # Get identifications
-        identifications = PlantIdentification.objects.select_related('user').filter(
-            created_at__gte=start_date,
-            created_at__lte=end_date
-        ).order_by('-created_at')
-        
-        if format_type == 'csv':
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = f'attachment; filename="plant_identifications_{start_date.date()}_to_{end_date.date()}.csv"'
-            
-            writer = csv.writer(response)
-            writer.writerow([
-                'ID', 'Username', 'Email', 'Plant Name', 'Confidence (%)', 
-                'Location', 'Date', 'Is Correct', 'Notes'
-            ])
-            
-            for identification in identifications:
-                writer.writerow([
-                    identification.id,
-                    identification.user.username,
-                    identification.user.email,
-                    identification.predicted_name,
-                    round(identification.confidence_score * 100, 1),
-                    identification.location or '',
-                    identification.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    identification.is_correct,
-                    identification.notes or ''
-                ])
-            
-            return response
-        
-        elif format_type == 'json':
-            data = []
-            for identification in identifications:
-                data.append({
-                    'id': identification.id,
-                    'user': {
-                        'username': identification.user.username,
-                        'email': identification.user.email
-                    },
-                    'plantName': identification.predicted_name,
-                    'confidence': round(identification.confidence_score * 100, 1),
-                    'location': identification.location,
-                    'date': identification.created_at.isoformat(),
-                    'isCorrect': identification.is_correct,
-                    'notes': identification.notes
-                })
-            
-            response = HttpResponse(
-                json.dumps(data, indent=2),
-                content_type='application/json'
-            )
-            response['Content-Disposition'] = f'attachment; filename="plant_identifications_{start_date.date()}_to_{end_date.date()}.json"'
-            return response
-            
-        else:
-            return Response({'error': 'Unsupported format'}, status=400)
-            
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
