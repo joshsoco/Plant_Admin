@@ -2,149 +2,157 @@
 // Add this to your frontend services
 import { authService } from '@/features/auth/services/authService';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'; // Your Django backend URL
 
-const API_BASE_URL = 'http://127.0.0.1:8000'; // Your Django backend URL
+function buildHeaders(json = true, token?: string) {
+  const access = token ?? authService?.getAccessToken?.();
+  const headers: Record<string, string> = {};
+  if (json) headers['Content-Type'] = 'application/json';
+  if (access) headers['Authorization'] = `Bearer ${access}`;
+  return headers;
+}
+
+async function handleResponse(response: Response) {
+  const text = await response.text();
+  let payload: any = null;
+  try {
+    payload = text ? JSON.parse(text) : null;
+  } catch (e) {
+    // not JSON
+    payload = text;
+  }
+  if (!response.ok) {
+    const message = (payload && payload.detail) || (typeof payload === 'string' ? payload : JSON.stringify(payload)) || response.statusText;
+    const err = new Error(`${response.status}: ${message}`);
+    // attach original payload for callers who want structured error info
+    (err as any).payload = payload;
+    throw err;
+  }
+  return payload;
+}
 
 export class PlantAPI {
-  
   // Authentication endpoints
   static async login(credentials: { username: string; password: string }) {
     const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(true),
       credentials: 'include',
       body: JSON.stringify(credentials),
     });
-    return response.json();
+    return handleResponse(response);
   }
 
   // Plant identification endpoints for mobile app
-  static async identifyPlant(imageFile: File, location: string = '', token: string) {
+  static async identifyPlant(imageFile: File, location: string = '', token?: string) {
     const formData = new FormData();
     formData.append('image', imageFile);
     formData.append('location', location);
 
     const response = await fetch(`${API_BASE_URL}/api/plants/predict/`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
+      // Do NOT set Content-Type for FormData; browser will set boundary
+      headers: buildHeaders(false, token),
       credentials: 'include',
       body: formData,
     });
-    return response.json();
+    return handleResponse(response);
   }
 
   // Admin dashboard endpoints
-  static async getPlantIdentifications(token: string) {
-  const response = await fetch(`${API_BASE_URL}/api/plants/admin/identifications/`, {
-    method: 'GET',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` // <-- add token here
-    },
-  });
-  return response.json();
-}
+  static async getPlantIdentifications(token?: string) {
+    const response = await fetch(`${API_BASE_URL}/api/plants/admin/identifications/`, {
+      method: 'GET',
+      headers: buildHeaders(true, token),
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  }
 
+  static async getDashboardStats(token?: string) {
+    const response = await fetch(`${API_BASE_URL}/api/plants/admin/stats/`, {
+      method: 'GET',
+      headers: buildHeaders(true, token),
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  }
 
-  static async getDashboardStats(token: string) {
-  const response = await fetch(`${API_BASE_URL}/api/plants/admin/stats/`, {
-    method: 'GET',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` // <-- add token here
-    },
-  });
-  return response.json();
-}
-
-  static async getPlantSpecies() {
+  static async getPlantSpecies(token?: string) {
     const response = await fetch(`${API_BASE_URL}/api/plants/species/`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(true, token),
       credentials: 'include',
     });
-    return response.json();
+    return handleResponse(response);
   }
 
-  static async getRandomPlants() {
+  static async getRandomPlants(token?: string) {
     const response = await fetch(`${API_BASE_URL}/api/plants/random/`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(true, token),
       credentials: 'include',
     });
-    return response.json();
+    return handleResponse(response);
   }
 
-  // Example for analytics data
-static async getAnalyticsData(timeRange: string, search: string) {
-    const token = authService.getAccessToken(); // get current access token
-
-    const response = await fetch(
-      `${API_BASE_URL}/api/plants/analytics/?time_range=${timeRange}&search=${search}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`${response.status}: ${errorText}`);
-    }
-
-    return response.json();
-  }
-
-
-  static async getTopSearched(timeRange: string = 'month', search: string = '') {
+  // Analytics endpoints
+  static async getAnalyticsData(timeRange: string = 'month', search: string = '', token?: string) {
     const params = new URLSearchParams({ time_range: timeRange, search });
-    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/plants/top-searched/?${params}`, {
+    const response = await fetch(`${API_BASE_URL}/analytics/?${params.toString()}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(true, token),
       credentials: 'include',
     });
-    return response.json();
+    return handleResponse(response);
   }
 
-  static async getTimeSeries(timeRange: string = 'month') {
+  static async getTopSearched(timeRange: string = 'month', search: string = '', token?: string) {
+    const params = new URLSearchParams({ time_range: timeRange, search });
+    const response = await fetch(`${API_BASE_URL}/analytics/plants/top-searched/?${params.toString()}`, {
+      method: 'GET',
+      headers: buildHeaders(true, token),
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  }
+
+  static async getTimeSeries(timeRange: string = 'month', token?: string) {
     const params = new URLSearchParams({ time_range: timeRange });
-    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/identifications/time-series/?${params}`, {
+    const response = await fetch(`${API_BASE_URL}/analytics/identifications/time-series/?${params.toString()}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(true, token),
       credentials: 'include',
     });
-    return response.json();
+    return handleResponse(response);
   }
 
-  static async getFlaggedCases() {
-    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/plants/flagged/`, {
+  static async getFlaggedCases(token?: string) {
+    const response = await fetch(`${API_BASE_URL}/analytics/plants/flagged/`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(true, token),
       credentials: 'include',
     });
-    return response.json();
+    return handleResponse(response);
   }
 
-  static async getSummary(timeRange: string = 'month') {
+  static async getSummary(timeRange: string = 'month', token?: string) {
     const params = new URLSearchParams({ time_range: timeRange });
-    const response = await fetch(`${API_BASE_URL}/api/plants/analytics/summary/?${params}`, {
+    const response = await fetch(`${API_BASE_URL}/analytics/summary/?${params.toString()}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(true, token),
       credentials: 'include',
     });
-    return response.json();
+    return handleResponse(response);
   }
 
   // New: Fetch identification history for a specific plant identification
-  static async getPlantHistory(identificationId: number) {
-    const response = await fetch(`${API_BASE_URL}/api/plants/admin/identifications/${identificationId}/history/`, {
+  static async getPlantHistory(identificationId: number, token?: string) {
+    const response = await fetch(`${API_BASE_URL}/admin/identifications/${identificationId}/history/`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(true, token),
       credentials: 'include',
     });
-    return response.json();
+    return handleResponse(response);
   }
 }
